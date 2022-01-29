@@ -77,6 +77,54 @@ public class LexerTests {
 		checkEOF(lexer.next());
 	}
 	
+	//Just a plus.
+	@Test
+	void testSinglePlus() throws LexicalException {
+		String input = "+";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.PLUS);
+		checkEOF(lexer.next());
+	}
+	
+	//Every symbol currently implemented that is defined under <token> (see lexical structure)
+	@Test
+	void testAllSymbols() throws LexicalException {
+		String input = "+;|%^&,/()[]-*!=!";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.PLUS);
+		checkToken(lexer.next(), Kind.SEMI);
+		checkToken(lexer.next(), Kind.OR);
+		checkToken(lexer.next(), Kind.MOD);
+		checkToken(lexer.next(), Kind.RETURN);
+		checkToken(lexer.next(), Kind.AND);
+		checkToken(lexer.next(), Kind.COMMA);
+		checkToken(lexer.next(), Kind.DIV);
+		checkToken(lexer.next(), Kind.LPAREN);
+		checkToken(lexer.next(), Kind.RPAREN);
+		checkToken(lexer.next(), Kind.LSQUARE);
+		checkToken(lexer.next(), Kind.RSQUARE);
+		checkToken(lexer.next(), Kind.MINUS);
+		checkToken(lexer.next(), Kind.TIMES);
+		checkToken(lexer.next(), Kind.NOT_EQUALS);
+		checkToken(lexer.next(), Kind.BANG);
+		checkEOF(lexer.next());
+	}
+	
+	@Test
+	// Bang/not equals
+	void testBang() throws LexicalException {
+		String input = "!=!+!";  //TODO: add !Sammy and Sam!Sam when ident is added.
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.NOT_EQUALS);
+		checkToken(lexer.next(), Kind.BANG);
+		checkToken(lexer.next(), Kind.PLUS);
+		checkToken(lexer.next(), Kind.BANG);
+		checkEOF(lexer.next());
+	}
+	
 	//A couple of single character tokens
 	@Test
 	void testSingleChar0() throws LexicalException {
@@ -185,5 +233,17 @@ public class LexerTests {
 			lexer.next();			
 		});
 	}
+	
+	// Test for \\t problem mentioned in class.
+	// Expected output: hi\twhat
+	// Wrong output: hi	what  (actual tab)
+	// TODO implement checkString method.
+	/*
+	public void testEscapeChar() throws LexicalException {
+		String input = "hi\\twhat";
+		ILexer lexer = getLexer(input);
+		
+	}
+	*/
 
 }
