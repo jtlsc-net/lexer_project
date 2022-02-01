@@ -16,6 +16,7 @@ public class Lexer implements ILexer {
 	private States state;
 	private ArrayList<IToken> tokenArr = new ArrayList<IToken>();
 	private int arrListIndex = 0;
+
 	//make prettier map if needed
 	public Lexer(){
 		reservedWords= new HashMap<String, Kind>();;
@@ -48,6 +49,7 @@ public class Lexer implements ILexer {
 		reservedWords.put("boolean", Kind.TYPE);
 		reservedWords.put("color", Kind.TYPE);
 		reservedWords.put("image", Kind.TYPE);
+		reservedWords.put("void", Kind.TYPE);
 	}
 
 
@@ -61,6 +63,8 @@ public class Lexer implements ILexer {
 		IN_NUM,
 		IN_FLOAT,
 		IN_INDENT,
+		HAVE_GREAT,
+		HAVE_LESS,
 
 		END
 	}
@@ -74,7 +78,7 @@ public class Lexer implements ILexer {
 	@Override
 	public IToken next() throws LexicalException {
 		char ch;
-		int startPos;
+		int startPos=0;
 		state = States.START;
 		while(true) {
 			if(inputString.length() > position) {
@@ -84,12 +88,12 @@ public class Lexer implements ILexer {
 				ch = '0';
 				//change or keep
 			}
-			startPos = position; //maybe do this  when start happens, i feel like startPos resets after every while run
+			//startPos = position; //maybe do this  when start happens, i feel like startPos resets after every while run
 			// will be detrimental to values that need more than one char. Maybe, update startpos to position to the start case, tell if wrong;
 			switch(state) {
 				case START -> {
+					startPos = position;  // change this if needed
 					switch(ch) {
-
 						case '+' -> {
 							tokenArr.add(new Token(Kind.PLUS, startPos, 1, String.valueOf(ch)));
 							position++;
@@ -186,6 +190,19 @@ public class Lexer implements ILexer {
 							position++;
 							break;
 						}
+						case '>' -> {
+							state = States.HAVE_GREAT;
+							position++;
+							break;
+						}
+						case '<' -> {
+							state = States.HAVE_LESS;
+							position++;
+							break;
+
+						}
+
+
 						case '0' -> {
 							//this needs to be fixed
 							tokenArr.add(new Token(Kind.EOF, startPos, 1, String.valueOf('h'))); // For EOF I think string doesn't matter?
@@ -258,32 +275,99 @@ public class Lexer implements ILexer {
 
 					}
 				}
+
+
 				case HAVE_EQ -> {
+					switch(ch){
+						case'='->{
+							tokenArr.add(new Token(Kind.EQUALS, startPos, 2, inputString.substring(startPos, position)));
+							state= state.START;
+							position++;
+							break;
+						}
+						default -> {
+							throw new IllegalStateException("Lexer bug (HAVE_EQUAL)");
+						}
+					}
+
+
+
+
 					//Determine if ==
-					if(inputString.length() > position) {
-						ch = inputString.charAt(position);
-					}
-					else{
-						tokenArr.add(new Token(Kind.ASSIGN, startPos, 1, String.valueOf(ch)));
-						state = States.START;
-						break;
-					}
-					if(ch == '=') {
-						tokenArr.add(new Token(Kind.EQUALS, startPos, 2, inputString.substring(startPos, position)));
-						position++;
-						state = States.START;
-					}
-					else if( ch!= '='){
-						tokenArr.add(new Token(Kind.ASSIGN,startPos, 1,String.valueOf(ch)));
-						//Dont Increment Position
-					}
-					else{
-						throw new IllegalStateException("Lexer bug (HAVE_EQ)");
-					}
-
-
+					//		if(inputString.length() > position) {
+					//			ch = inputString.charAt(position);
+					//		}
+					//		else{
+					//			tokenArr.add(new Token(Kind.ASSIGN, startPos, 1, String.valueOf(ch)));
+					//			state = States.START;
+					//			break;
+					//		}
+					//		if(ch == '=') {
+					//			tokenArr.add(new Token(Kind.EQUALS, startPos, 2, inputString.substring(startPos, position)));
+					//			position++;
+					//			state = States.START;
+					//		}
+					//		else if( ch!= '='){
+					//			tokenArr.add(new Token(Kind.ASSIGN,startPos, 1,String.valueOf(ch)));
+					//			//Dont Increment Position
+					//		}
+					//		else{
+					//			throw new IllegalStateException("Lexer bug (HAVE_EQ)");
+					//		}
 
 				}
+//check if my logic makes sense
+				case HAVE_LESS ->{
+					switch(ch){
+						case'='-> {
+							tokenArr.add(new Token(Kind.LE, startPos, 2, inputString.substring(startPos, position)));
+							position++;
+							state = States.START;
+							break;
+						}
+						case '<'->{
+							tokenArr.add(new Token(Kind.LANGLE, startPos, 2, inputString.substring(startPos, position)));
+							position++;
+							state = States.START;
+							break;
+						}
+						default -> {
+							tokenArr.add(new Token(Kind.LT, startPos, 1, String.valueOf(ch)));
+
+							state= state.START;
+
+						}
+					}
+				}
+				case HAVE_GREAT ->{
+					switch(ch){
+						case'='-> {
+							tokenArr.add(new Token(Kind.GE, startPos, 2, inputString.substring(startPos, position)));
+							state = States.START;
+							position++;
+							break;
+						}
+						case '>'->{
+							tokenArr.add(new Token(Kind.RANGLE, startPos, 2, inputString.substring(startPos, position)));
+							state = States.START;
+							position++;
+							break;
+						}
+						default -> {
+							tokenArr.add(new Token(Kind.GT, startPos, 1, String.valueOf(ch)));
+							state= state.START;
+
+						}
+					}
+				}
+
+
+
+
+
+
+
+
 				// Need to determine if '!' or '!='
 				case HAVE_BANG -> {
 					// Check for end of file
@@ -331,6 +415,8 @@ public class Lexer implements ILexer {
 		else {
 			throw new LexicalException("Attempted to access out of bounds.");
 		}
+
+
 	}
 
 
