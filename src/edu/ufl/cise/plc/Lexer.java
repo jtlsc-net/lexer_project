@@ -49,7 +49,10 @@ public class Lexer implements ILexer {
 		reservedWords.put("boolean", Kind.TYPE);
 		reservedWords.put("color", Kind.TYPE);
 		reservedWords.put("image", Kind.TYPE);
-		reservedWords.put("void", Kind.TYPE);
+		reservedWords.put("void", Kind.KW_VOID);
+		reservedWords.put("getRed", Kind.COLOR_OP);
+		reservedWords.put("getGreen", Kind.COLOR_OP);
+		reservedWords.put("getBlue",Kind.COLOR_OP);
 	}
 
 
@@ -61,6 +64,7 @@ public class Lexer implements ILexer {
 		HAVE_BANG,
 		HAVE_AND,
 		IN_NUM,
+		HAVE_MINUS,
 		IN_FLOAT,
 		IN_INDENT,
 		HAVE_GREAT,
@@ -86,7 +90,7 @@ public class Lexer implements ILexer {
 			}
 			else {
 				ch = '0';
-				//change or keep
+				//state = States.END;
 			}
 			//startPos = position; //maybe do this  when start happens, i feel like startPos resets after every while run
 			// will be detrimental to values that need more than one char. Maybe, update startpos to position to the start case, tell if wrong;
@@ -170,7 +174,10 @@ public class Lexer implements ILexer {
 							break;
 						}
 						case '-' -> {
-							tokenArr.add(new Token(Kind.MINUS, startPos, 1, String.valueOf(ch)));
+							//			tokenArr.add(new Token(Kind.MINUS, startPos, 1, String.valueOf(ch)));
+							//			position++;
+
+							state= States.HAVE_MINUS;
 							position++;
 							break;
 						}
@@ -231,10 +238,10 @@ public class Lexer implements ILexer {
 
 							String value = inputString.substring(startPos, position);
 							if (reservedWords.containsKey(value)) {
-								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, String.valueOf(value)));
+								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value));
 							} else {
 
-								tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, String.valueOf(value)));
+								tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value));
 								state = state.START;                                                //check if right
 							}
 
@@ -255,7 +262,7 @@ public class Lexer implements ILexer {
 
 						}
 						default ->{
-							tokenArr.add(new Token(Kind.IDENT,startPos, position-startPos, String.valueOf(inputString.substring(startPos, position))));
+							tokenArr.add(new Token(Kind.IDENT,startPos, position-startPos, inputString.substring(startPos, position)));
 							state=state.START;												//check if right
 						}
 
@@ -269,13 +276,28 @@ public class Lexer implements ILexer {
 							position++;
 						}
 						default -> {
-							tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, String.valueOf(inputString.substring(startPos, position))));
+							tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, inputString.substring(startPos, position)));
 							state = state.START;
 						}
 
 					}
 				}
 
+				case HAVE_MINUS -> {
+					switch (ch){
+						case '>'->{
+							tokenArr.add(new Token(Kind.RARROW, startPos, 2, inputString.substring(startPos, position)));
+							position++;
+							state=States.START;
+							break;
+						}
+						default -> {
+							tokenArr.add(new Token(Kind.MINUS, startPos, 1, String.valueOf(ch)));
+							state= state.START;
+						}
+
+					}
+				}
 
 				case HAVE_EQ -> {
 					switch(ch){
@@ -330,6 +352,13 @@ public class Lexer implements ILexer {
 							position++;
 							state = States.START;
 							break;
+						}
+						case '-'->{
+							tokenArr.add(new Token(Kind.LARROW, startPos, 2, inputString.substring(startPos, position)));
+							position++;
+							state=States.START;
+							break;
+
 						}
 						default -> {
 							tokenArr.add(new Token(Kind.LT, startPos, 1, String.valueOf(ch)));
