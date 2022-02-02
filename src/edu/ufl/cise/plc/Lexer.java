@@ -19,7 +19,6 @@ public class Lexer implements ILexer {
 	private int arrListIndex = 0;
 
 
-
 	//DFA doesnt mention color_op on reserved? Add?
 
 	private static enum States {
@@ -231,12 +230,18 @@ public class Lexer implements ILexer {
 							//	System.out.println(value + " ");
 							//	System.out.println(this.reservedWords.size());
 							position++;
+							//consider making a universal value variable
 							String value = inputString.substring(startPos, position);
 							//removed later if unnecessary
 							if(inputString.length() <= position) {
 								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value));
 								state=state.START;
 
+							}
+							else {
+
+								tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value));
+								state = state.START;
 							}
 
 							break;
@@ -264,8 +269,18 @@ public class Lexer implements ILexer {
 				case IN_NUM -> {
 					switch(ch){
 						case '0','1','2','3','4','5','6','7','8','9'->{
+							//System.out.println(ch);
+							if(inputString.length() <= position){
 
-							position++;
+								String value = inputString.substring(startPos, position);
+
+
+								tokenArr.add(new Token(Kind.INT_LIT, startPos, position - startPos, value));
+								state = state.START;
+							}else {
+
+								position++;
+							}
 						}
 						case '.'->{
 							position++;
@@ -273,7 +288,8 @@ public class Lexer implements ILexer {
 
 						}
 						default ->{
-							tokenArr.add(new Token(Kind.IDENT,startPos, position-startPos, inputString.substring(startPos, position)));
+							//System.out.println(inputString.substring(startPos, position));
+							tokenArr.add(new Token(Kind.INT_LIT,startPos, position-startPos, inputString.substring(startPos, position)));
 							state=state.START;												//check if right
 						}
 
@@ -284,7 +300,15 @@ public class Lexer implements ILexer {
 					switch (ch) {
 						case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
 							//still need to consider cases with leading 0s at end of decimal
-							position++;
+							if(inputString.length() <= position){
+								//if over end
+								String value = inputString.substring(startPos, position);
+								tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, value));
+								state = state.START;
+							}else {
+								position++;
+							}
+
 						}
 						default -> {
 							tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, inputString.substring(startPos, position)));

@@ -3,14 +3,47 @@ package edu.ufl.cise.plc;
 import edu.ufl.cise.plc.IToken.Kind;
 
 public interface IToken {
-	
-    public record SourceLocation(int line, int column) {}  
+
+	public record SourceLocation(int line, int column) {
+		//right spot?
+		private SourceLocation findSource(int startPosition, int tokenLength, String inputString) {
+			boolean inEscape = false;
+			int line = 0;
+			int column = 0;
+			for(int i = 0; i < startPosition; i++) {
+				char a = inputString.charAt(i);
+//            if(inEscape & (a == 'r' | a == 'n')) {
+//                line++;
+//                column = -1;
+//                inEscape = false;
+//            }
+//            else if(inEscape) {
+//                inEscape = false;
+//            }
+//            if(a == '\\') {
+//                inEscape = true;
+//            }
+
+
+				if(a == '\n') {
+					line++;
+					column = -1;
+				}
+				else if(a == '\r') {
+					line++;
+					column = -1;
+				}
+				column++;
+			}
+			return new SourceLocation(line, column);
+		}
+	}
 
 	public static enum Kind {
-		IDENT, 
-		INT_LIT, 
-		FLOAT_LIT, 
-		STRING_LIT, 
+		IDENT,
+		INT_LIT,
+		FLOAT_LIT,
+		STRING_LIT,
 		BOOLEAN_LIT,// 'true','false'
 		LPAREN, // '('
 		RPAREN, // ')'
@@ -24,7 +57,7 @@ public interface IToken {
 		DIV,  //  '/'
 		MOD,  // '%'
 		COLOR_CONST, // 'BLACK','BLUE','CYAN','DARK_GRAY','GRAY','GREEN','LIGHT_GRAY','MAGENTA','ORANGE','PINK',
-					// 'RED','WHITE','YELLOW'
+		// 'RED','WHITE','YELLOW'
 		KW_IF, // 'if'
 		KW_FI, //'fi'
 		KW_ELSE, //'else'
@@ -52,14 +85,14 @@ public interface IToken {
 		EOF, // used as sentinal, does not correspond to input
 		ERROR, // use to avoid exceptions if scanning all input at once
 	}
-	
+
 	//returns the token kind
 	public Kind getKind();
 
 	//returns the characters in the source code that correspond to this token
 	//if the token is a STRING_LIT, this returns the raw characters, including delimiting "s and unhandled escape sequences.
 	public String getText();
-	
+
 	//returns the location in the source code of the first character of the token.
 	public SourceLocation getSourceLocation();
 
@@ -71,10 +104,10 @@ public interface IToken {
 
 	//returns the boolean value represented by the characters of this token if kind is BOOLEAN_LIT
 	public boolean getBooleanValue();
-	
+
 	//returns the String represented by the characters of this token if kind is STRING_LIT
 	//The delimiters should be removed and escape sequences replaced by the characters they represent.  
 	public String getStringValue();
 
-	
+
 }

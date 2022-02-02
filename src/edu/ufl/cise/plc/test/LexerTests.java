@@ -238,9 +238,6 @@ public class LexerTests {
 		String input = "123456";
 		ILexer lexer = getLexer(input);
 		checkInt(lexer.next(),123456);
-		Exception e = assertThrows(LexicalException.class, () -> {
-			lexer.next();
-		});
 
 	}
 	@Test
@@ -248,7 +245,7 @@ public class LexerTests {
 		String input = "void+";
 		show(input);
 		ILexer lexer = getLexer(input);
-		checkIdent(lexer.next(), "void", 0, 0);
+		checkToken(lexer.next(), Kind.KW_VOID);
 	}
 
 
