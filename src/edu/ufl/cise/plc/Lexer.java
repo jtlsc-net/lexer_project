@@ -1,4 +1,5 @@
 package edu.ufl.cise.plc;
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.ArrayList;
 
@@ -17,8 +18,33 @@ public class Lexer implements ILexer {
 	private ArrayList<IToken> tokenArr = new ArrayList<IToken>();
 	private int arrListIndex = 0;
 
-	//make prettier map if needed
-	public Lexer(){
+
+
+	//DFA doesnt mention color_op on reserved? Add?
+
+	private static enum States {
+		START,
+		HAVE_EQ,
+		HAVE_BANG,
+		HAVE_AND,
+		IN_NUM,
+		HAVE_MINUS,
+		IN_FLOAT,
+		IN_INDENT,
+		HAVE_GREAT,
+		HAVE_LESS,
+
+		END
+	}
+
+	public Lexer(String input) {
+		this.inputString = input;
+	}
+
+	// Note that returning interface allows a function to return anything that implements
+	// that interface.
+	@Override
+	public IToken next() throws LexicalException {
 		reservedWords= new HashMap<String, Kind>();;
 		reservedWords.put("BLACK", Kind.COLOR_CONST);
 		reservedWords.put("BLUE",  Kind.COLOR_CONST);
@@ -53,40 +79,13 @@ public class Lexer implements ILexer {
 		reservedWords.put("getRed", Kind.COLOR_OP);
 		reservedWords.put("getGreen", Kind.COLOR_OP);
 		reservedWords.put("getBlue",Kind.COLOR_OP);
-	}
-
-
-	//DFA doesnt mention color_op on reserved? Add?
-
-	private static enum States {
-		START,
-		HAVE_EQ,
-		HAVE_BANG,
-		HAVE_AND,
-		IN_NUM,
-		HAVE_MINUS,
-		IN_FLOAT,
-		IN_INDENT,
-		HAVE_GREAT,
-		HAVE_LESS,
-
-		END
-	}
-
-	public Lexer(String input) {
-		this.inputString = input;
-	}
-
-	// Note that returning interface allows a function to return anything that implements
-	// that interface.
-	@Override
-	public IToken next() throws LexicalException {
 		char ch;
 		int startPos=0;
 		state = States.START;
 		while(true) {
 			if(inputString.length() > position) {
 				ch = inputString.charAt(position);  // get current character
+
 			}
 			else {
 				ch = '0';
@@ -226,19 +225,31 @@ public class Lexer implements ILexer {
 						case 'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H',
 								'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T',
 								'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '$', '_', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-								//,'+', '*','=' 			DFA says these values not needed?
+
 								-> {
+							//	String value = inputString.substring(startPos, position);
+							//	System.out.println(value + " ");
+							//	System.out.println(this.reservedWords.size());
 							position++;
+							String value = inputString.substring(startPos, position);
+							//removed later if unnecessary
+							if(inputString.length() <= position) {
+								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value));
+								state=state.START;
+
+							}
+
 							break;
 
 						}
 						//need to set things like forbidden words  and true and false here
 
 						default -> {
-
+							//	System.out.println("test");
 							String value = inputString.substring(startPos, position);
 							if (reservedWords.containsKey(value)) {
 								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value));
+								state=state.START;
 							} else {
 
 								tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value));
