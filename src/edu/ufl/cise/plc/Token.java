@@ -1,14 +1,14 @@
 package edu.ufl.cise.plc;
 
 public class Token implements IToken {
-	
+
 	//private SourceLocation sourceLocation;
 	final int position;
 	final int length;
 	final String input;
 	final Kind kind;
-	
-	
+
+
 	public Token(Kind kind, int position, int length, String input) {
 		this.kind = kind;
 		this.position = position;
@@ -41,13 +41,12 @@ public class Token implements IToken {
 	@Override
 	public int getIntValue() {
 		// TODO Auto-generated method stub
-		return 0;
+		return Integer.parseInt(input);
 	}
 
 	@Override
 	public float getFloatValue() {
-		// TODO Auto-generated method stub
-		return 0;
+		return Float.parseFloat(input);
 	}
 
 	@Override
@@ -58,8 +57,7 @@ public class Token implements IToken {
 
 	@Override
 	public String getStringValue() {
-		// TODO Auto-generated method stub
-		return null;
+		return input;
 	}
 
 }

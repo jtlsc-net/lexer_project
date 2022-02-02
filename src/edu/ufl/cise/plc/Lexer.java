@@ -234,16 +234,15 @@ public class Lexer implements ILexer {
 							String value = inputString.substring(startPos, position);
 							//removed later if unnecessary
 							if(inputString.length() <= position) {
-								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value));
-								state=state.START;
+								if (reservedWords.containsKey(value)) {
+									tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value));
+									state = state.START;
+								} else {
 
+									tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value));
+									state = state.START;
+								}
 							}
-							else {
-
-								tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value));
-								state = state.START;
-							}
-
 							break;
 
 						}
