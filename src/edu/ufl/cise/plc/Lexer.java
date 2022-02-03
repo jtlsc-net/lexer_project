@@ -426,6 +426,14 @@ public class Lexer implements ILexer {
 						case '.'->{
 							position++;
 							state = States.IN_FLOAT;
+							//	if(position > inputString.length() ||  inputString.charAt(position+1) ){
+							//TODO: CHECK IF NEXT CH IS A NUMBER OR NOT
+
+
+
+							//}
+
+
 						}
 						default ->{
 							//System.out.println(inputString.substring(startPos, position));
@@ -459,6 +467,7 @@ public class Lexer implements ILexer {
 							if(inputString.length() <= position){
 								//if over end
 								String value = inputString.substring(startPos, position);
+
 								try {
 									Float.valueOf(value + "f");
 								}
@@ -716,7 +725,7 @@ public class Lexer implements ILexer {
 	// Note that returning interface allows a function to return anything that implements
 	// that interface.
 
-	// Note I think that this 
+	// Note I think that this
 	@Override
 	public IToken next() throws LexicalException {
 
