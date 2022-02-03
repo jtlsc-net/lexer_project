@@ -421,6 +421,15 @@ public class LexerTests {
 		checkToken(lexer.next(), Kind.TIMES, 2,0);
 		checkEOF(lexer.next());
 	}
+	
+	@Test
+	public void testComment1() throws LexicalException {
+		String input = "#this is a comment \\b\n*";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.TIMES, 1,0);
+		checkEOF(lexer.next());
+	}
 
 	//Example for testing input with an illegal character
 	@Test

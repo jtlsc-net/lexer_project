@@ -32,6 +32,7 @@ public class Lexer implements ILexer {
 		IN_INDENT,
 		HAVE_GREAT,
 		HAVE_LESS,
+		HAVE_COMMENT,
 		
 		END
 	}
@@ -235,9 +236,19 @@ public class Lexer implements ILexer {
 							break;
 
 						}
-
+						case '#' -> {
+							state = States.HAVE_COMMENT;
+							position++;
+							break;
+						}
 						case '\n' -> {
 							position++;
+							lineNum++;
+							colNum = 0;
+							break;
+						}
+						case '\r' -> {
+							position = position + 2; // only \r\n occurs in input
 							lineNum++;
 							colNum = 0;
 							break;
@@ -308,6 +319,29 @@ public class Lexer implements ILexer {
 						}
 
 
+					}
+				}
+				case HAVE_COMMENT -> {
+					switch(ch) {
+						case '\r' -> {
+							position++;
+							lineNum++;
+							colNum = 0;
+							state = States.START;
+							break;
+						}
+						case '\n' -> {
+							position++;
+							lineNum++;
+							colNum = 0;
+							state = States.START;
+							break;
+						}
+						default -> {  //We don't care about error handling for comments.
+							position++;
+							colNum++;
+							break;
+						}
 					}
 				}
 				case IN_NUM -> {
