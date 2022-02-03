@@ -79,11 +79,20 @@ public class LexerTests {
 	
 	@Test
 	// Checking for correct 0 return.  Should not return EOF.
+	//00 should be read as INT_LIT INT_LIT (it is technically not illegal with our parser.
 	void testZero() throws LexicalException {
-		String input = "0";
+		String input = """
+				0
+				00
+				010
+				""";
 		show(input);
 		ILexer lexer = getLexer(input);
-		checkToken(lexer.next(), Kind.INT_LIT);
+		checkToken(lexer.next(), Kind.INT_LIT,0,0);
+		checkToken(lexer.next(), Kind.INT_LIT,1,0);
+		checkToken(lexer.next(), Kind.INT_LIT,1,1);
+		checkToken(lexer.next(), Kind.INT_LIT,2,0);
+		checkToken(lexer.next(), Kind.INT_LIT,2,1);
 	}
 
 	//Just a plus.
@@ -284,6 +293,17 @@ public class LexerTests {
 		show(input);
 		ILexer lexer = getLexer(input);
 		checkToken(lexer.next(), Kind.IDENT,0,0);
+	}
+	
+	@Test
+	//Test for rarrow and minus.
+	public void testHaveMinus() throws LexicalException {
+		String input = "-->-";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.MINUS,0,0);
+		checkToken(lexer.next(), Kind.RARROW,0,1);
+		checkToken(lexer.next(), Kind.MINUS,0,3);
 	}
 
 

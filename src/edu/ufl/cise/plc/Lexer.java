@@ -84,8 +84,12 @@ public class Lexer implements ILexer {
 		int startPos=0;
 		int lineNum = 0;
 		int colNum = 0;
+		boolean haveZero = false; //Used for IN_NUM
 		state = States.START;
 		while(true) {
+			if(state != States.IN_NUM) {
+				haveZero = false;
+			}
 			if(inputString.length() > position) {
 				ch = inputString.charAt(position);  // get current character
 
@@ -121,6 +125,12 @@ public class Lexer implements ILexer {
 								'u','U','v','V', 'w','W', 'x', 'X','y','Y','z','Z','$','_'-> {
 							state=States.IN_INDENT;
 							position++;
+							break;
+						}
+						case '0' -> {
+							state = States.IN_NUM;
+							position++;
+							haveZero = true;
 							break;
 						}
 						case '1','2','3','4','5','6','7','8','9'->{
@@ -245,7 +255,11 @@ public class Lexer implements ILexer {
 							colNum++;
 							break;
 						}
-						default -> throw new IllegalStateException("Lexer bug (START)");
+//						case '@' -> {
+//							tokenArr.add(new Token(Kind.ERROR, startPos, 1, "unused", lineNum, colNum));
+//							break;
+//						}
+						default -> throw new LexicalException("ERROR in START state.  Most likely invalid char.");
 					}
 				}
 
@@ -303,6 +317,14 @@ public class Lexer implements ILexer {
 				case IN_NUM -> {
 					switch(ch){
 						case '0','1','2','3','4','5','6','7','8','9'->{
+							// Case of 00, 01, etc., adding 0 found in START.
+							// Should be read as INT_LIT INT_LIT
+							if(haveZero) {
+								tokenArr.add(new Token(Kind.INT_LIT, startPos, 1, String.valueOf(0), lineNum, colNum));
+								startPos++;
+								colNum++;
+								haveZero = false;
+							}
 							//System.out.println(ch);
 							if(inputString.length() <= position){
 
@@ -320,7 +342,6 @@ public class Lexer implements ILexer {
 						case '.'->{
 							position++;
 							state = States.IN_FLOAT;
-
 						}
 						default ->{
 							//System.out.println(inputString.substring(startPos, position));
@@ -506,7 +527,7 @@ public class Lexer implements ILexer {
 						// DONT INCREMENT POSITION HERE!
 					}
 					else {
-						throw new IllegalStateException("Lexer bug (HAVE_BANG)");
+						throw new LexicalException("Lexer bug (HAVE_BANG)");
 					}
 				}
 				
@@ -516,7 +537,7 @@ public class Lexer implements ILexer {
 				}
 
 
-				default -> throw new IllegalStateException("Lexer bug");
+				default -> throw new LexicalException("Unknow lexer bug.  I am the default case of the main switch statement.");
 			}
 			if(state == States.END) {
 				break;
