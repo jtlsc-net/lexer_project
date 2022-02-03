@@ -4,40 +4,7 @@ import edu.ufl.cise.plc.IToken.Kind;
 
 public interface IToken {
 
-	public record SourceLocation(int line, int column) {
-		//right spot?
-		private SourceLocation findSource(int startPosition, int tokenLength, String inputString) {
-			boolean inEscape = false;
-			int line = 0;
-			int column = 0;
-			for(int i = 0; i < startPosition; i++) {
-				char a = inputString.charAt(i);
-//            if(inEscape & (a == 'r' | a == 'n')) {
-//                line++;
-//                column = -1;
-//                inEscape = false;
-//            }
-//            else if(inEscape) {
-//                inEscape = false;
-//            }
-//            if(a == '\\') {
-//                inEscape = true;
-//            }
-
-
-				if(a == '\n') {
-					line++;
-					column = -1;
-				}
-				else if(a == '\r') {
-					line++;
-					column = -1;
-				}
-				column++;
-			}
-			return new SourceLocation(line, column);
-		}
-	}
+	public record SourceLocation(int line, int column) {}
 
 	public static enum Kind {
 		IDENT,
@@ -106,7 +73,7 @@ public interface IToken {
 	public boolean getBooleanValue();
 
 	//returns the String represented by the characters of this token if kind is STRING_LIT
-	//The delimiters should be removed and escape sequences replaced by the characters they represent.  
+	//The delimiters should be removed and escape sequences replaced by the characters they represent.
 	public String getStringValue();
 
 
