@@ -87,7 +87,7 @@ public class Token implements IToken {
 	@Override
 	public boolean getBooleanValue() {
 		// TODO Auto-generated method stub
-		return false;
+		return Boolean.parseBoolean(input);
 	}
 
 	@Override

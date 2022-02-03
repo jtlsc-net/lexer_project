@@ -1,5 +1,5 @@
 package edu.ufl.cise.plc;
-import java.sql.SQLOutput;
+//import java.sql.SQLOutput;
 import java.util.*;
 import java.util.ArrayList;
 
@@ -94,9 +94,7 @@ public class Lexer implements ILexer {
 				ch = 'h';
 				state = States.END;
 			}
-			else if(state != States.START) {
-				ch = ch;
-			}
+			else if(state != States.START) {}
 			else {
 //				throw new LexicalException("Position error. Position: " + String.valueOf(position));
 				tokenArr.add(new Token(Kind.ERROR, startPos, 1, "Position error. Position: " + String.valueOf(position), lineNum, colNum));
@@ -280,12 +278,12 @@ public class Lexer implements ILexer {
 								if (reservedWords.containsKey(value)) {
 									tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value, lineNum, colNum));
 									colNum = colNum + (position - startPos);
-									state = state.START;
+									state = States.START;
 								} else {
 
 									tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value, lineNum, colNum));
 									colNum = colNum + (position - startPos);
-									state = state.START;
+									state = States.START;
 								}
 							}
 							break;
@@ -299,12 +297,12 @@ public class Lexer implements ILexer {
 							if (reservedWords.containsKey(value)) {
 								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value, lineNum, colNum));
 								colNum = colNum + (position - startPos);
-								state=state.START;
+								state = States.START;
 							} else {
 
 								tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value, lineNum, colNum));
 								colNum = colNum + (position - startPos);
-								state = state.START;                                                //check if right
+								state = States.START;                                                //check if right
 							}
 
 						}
@@ -378,6 +376,7 @@ public class Lexer implements ILexer {
 
 				}
 				case IN_FLOAT -> {
+					//TODO: Error checking doesn't work for float.  Makes infinity instead of throwing too large error, lol.
 					boolean inFloatError = false;
 					switch (ch) {
 						case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
@@ -385,7 +384,7 @@ public class Lexer implements ILexer {
 								//if over end
 								String value = inputString.substring(startPos, position);
 								try {
-									Float.valueOf(value);
+									Float.valueOf(value + "f");
 								}
 								catch(NumberFormatException e) {
 									inFloatError = true;
@@ -407,7 +406,7 @@ public class Lexer implements ILexer {
 						default -> {
 							String value = inputString.substring(startPos, position);
 							try {
-								Float.valueOf(value);
+								Float.valueOf(value + "f");
 							}
 							catch(NumberFormatException e) {
 								inFloatError = true;
@@ -438,7 +437,7 @@ public class Lexer implements ILexer {
 						default -> {
 							tokenArr.add(new Token(Kind.MINUS, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							colNum++;
-							state= state.START;
+							state= States.START;
 						}
 
 					}
@@ -540,14 +539,14 @@ public class Lexer implements ILexer {
 							tokenArr.add(new Token(Kind.LARROW, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
 							position++;
 							colNum = colNum + 2;
-							state=States.START;
+							state = States.START;
 							break;
 
 						}
 						default -> {
 							tokenArr.add(new Token(Kind.LT, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							colNum++;
-							state= state.START;
+							state = States.START;
 
 						}
 					}
@@ -571,7 +570,7 @@ public class Lexer implements ILexer {
 						default -> {
 							tokenArr.add(new Token(Kind.GT, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							colNum++;
-							state= state.START;
+							state = States.START;
 
 						}
 					}
@@ -665,7 +664,17 @@ public class Lexer implements ILexer {
 
 	@Override
 	public IToken peek() throws LexicalException {
-		throw new LexicalException("Peek not implemented yet.");
+		if(arrListIndex < tokenArr.size()) {
+			IToken returnToken = tokenArr.get(arrListIndex);
+			if(returnToken.getKind() == Kind.ERROR) {
+				throw new LexicalException(returnToken.getStringValue(), returnToken.getSourceLocation());
+			}
+			return returnToken;
+		}
+		else {
+			throw new LexicalException("Attempted to access out of bounds.");
+		}
+//		throw new LexicalException("Peek not implemented yet.");
 	}
 
 }
