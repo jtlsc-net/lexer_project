@@ -5,6 +5,7 @@ import edu.ufl.cise.plc.IToken.Kind;
 public interface IToken {
 
 	public record SourceLocation(int line, int column) {}
+		
 
 	public static enum Kind {
 		IDENT,
@@ -73,7 +74,7 @@ public interface IToken {
 	public boolean getBooleanValue();
 
 	//returns the String represented by the characters of this token if kind is STRING_LIT
-	//The delimiters should be removed and escape sequences replaced by the characters they represent.
+	//The delimiters should be removed and escape sequences replaced by the characters they represent.  
 	public String getStringValue();
 
 

@@ -42,8 +42,8 @@ public class Lexer implements ILexer {
 
 	// Note that returning interface allows a function to return anything that implements
 	// that interface.
-
-	// Note I think that this
+	
+	// Note I think that this 
 	@Override
 	public IToken next() throws LexicalException {
 		reservedWords= new HashMap<String, Kind>();;
@@ -80,7 +80,7 @@ public class Lexer implements ILexer {
 		reservedWords.put("getRed", Kind.COLOR_OP);
 		reservedWords.put("getGreen", Kind.COLOR_OP);
 		reservedWords.put("getBlue",Kind.COLOR_OP);
-		char ch;
+		char ch = 'a';
 		int startPos=0;
 		int lineNum = 0;
 		int colNum = 0;
@@ -90,9 +90,19 @@ public class Lexer implements ILexer {
 				ch = inputString.charAt(position);  // get current character
 
 			}
+			else if((inputString.length() == position) & (position != 0) & (state == States.START)) {
+				ch = inputString.charAt(position - 1);
+				state = States.END;
+			}
+			else if(position == 0 & state == States.START) {
+				ch = 'h';
+				state = States.END;
+			}
+			else if(state != States.START) {
+				ch = ch;
+			}
 			else {
-				ch = '0';
-				//state = States.END;
+				throw new LexicalException("Position error. Position: " + String.valueOf(position));
 			}
 			//startPos = position; //maybe do this  when start happens, i feel like startPos resets after every while run
 			// will be detrimental to values that need more than one char. Maybe, update startpos to position to the start case, tell if wrong;
@@ -235,12 +245,6 @@ public class Lexer implements ILexer {
 							colNum++;
 							break;
 						}
-						case '0' -> {
-							//this needs to be fixed
-							tokenArr.add(new Token(Kind.EOF, startPos, 1, String.valueOf('h'), lineNum, colNum)); // For EOF I think string doesn't matter?
-							state = States.END;
-							break;
-						}
 						default -> throw new IllegalStateException("Lexer bug (START)");
 					}
 				}
@@ -253,10 +257,6 @@ public class Lexer implements ILexer {
 								'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '$', '_', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
 
 								-> {
-							//consider making a universal value variable
-							String value = inputString.substring(startPos, position);
-
-
 							//	String value = inputString.substring(startPos, position);
 							//	System.out.println(value + " ");
 							//	System.out.println(this.reservedWords.size());
@@ -279,21 +279,8 @@ public class Lexer implements ILexer {
 							break;
 
 						}
+						//need to set things like forbidden words  and true and false here
 
-						case ' ' ->{
-							String value = inputString.substring(startPos, position);
-							if (reservedWords.containsKey(value)) {
-								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value, lineNum, colNum));
-								state=state.START;
-							} else {
-
-								tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value, lineNum, colNum));
-								state = state.START;                                                //check if right
-							}
-							position++;
-							colNum++;
-							break;
-						}
 						default -> {
 							//	System.out.println("test");
 							String value = inputString.substring(startPos, position);
@@ -316,20 +303,10 @@ public class Lexer implements ILexer {
 				case IN_NUM -> {
 					switch(ch){
 						case '0','1','2','3','4','5','6','7','8','9'->{
-							String value = inputString.substring(startPos, position);
 							//System.out.println(ch);
-							if(Math.abs(Long.parseLong(value)) > Integer.MAX_VALUE){
-
-
-								//ADD ERROR STATEMENT HERE
-
-							}
-
-
-
 							if(inputString.length() <= position){
 
-
+								String value = inputString.substring(startPos, position);
 
 
 								tokenArr.add(new Token(Kind.INT_LIT, startPos, position - startPos, value, lineNum, colNum));
@@ -344,12 +321,6 @@ public class Lexer implements ILexer {
 							position++;
 							state = States.IN_FLOAT;
 
-						}
-						case ' '->{
-							tokenArr.add(new Token(Kind.INT_LIT,startPos, position-startPos, inputString.substring(startPos, position), lineNum, colNum));
-							position++;
-							colNum++;
-							state=state.START;
 						}
 						default ->{
 							//System.out.println(inputString.substring(startPos, position));
@@ -375,12 +346,6 @@ public class Lexer implements ILexer {
 								position++;
 							}
 
-						}
-						case ' '->{
-							tokenArr.add(new Token(Kind.FLOAT_LIT,startPos, position-startPos, inputString.substring(startPos, position), lineNum, colNum));
-							position++;
-							colNum++;
-							state=state.START;
 						}
 						default -> {
 							tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, inputString.substring(startPos, position), lineNum, colNum));
@@ -544,7 +509,11 @@ public class Lexer implements ILexer {
 						throw new IllegalStateException("Lexer bug (HAVE_BANG)");
 					}
 				}
-
+				
+				case END -> {
+					tokenArr.add(new Token(Kind.EOF, startPos, 1, String.valueOf('h'), lineNum, colNum));
+					break;
+				}
 
 
 				default -> throw new IllegalStateException("Lexer bug");

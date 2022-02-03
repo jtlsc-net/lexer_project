@@ -76,6 +76,15 @@ public class LexerTests {
 		ILexer lexer = getLexer(input);
 		checkEOF(lexer.next());
 	}
+	
+	@Test
+	// Checking for correct 0 return.  Should not return EOF.
+	void testZero() throws LexicalException {
+		String input = "0";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.INT_LIT);
+	}
 
 	//Just a plus.
 	@Test
