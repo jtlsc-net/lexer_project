@@ -257,6 +257,25 @@ public class LexerTests {
 		ILexer lexer = getLexer(input);
 		checkToken(lexer.next(), Kind.PLUS, 1,0);
 	}
+	
+	@Test
+	//Test for \n in middle of string.  Should make 2 tokens.
+	public void testSlashNString() throws LexicalException {
+		String input = "hi\nbye";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.IDENT,0,0);
+		checkToken(lexer.next(), Kind.IDENT,1,0);
+	}
+	
+	@Test
+	//Test for reserved word in larger string.  Should return normal indent, not reserved word.
+	public void testNotReserved() throws LexicalException {
+		String input = "stringVar";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.IDENT,0,0);
+	}
 
 
 	// Test for \\t problem mentioned in class.
