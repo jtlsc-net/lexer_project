@@ -442,6 +442,22 @@ public class LexerTests {
 		checkToken(lexer.next(), Kind.TIMES, 0,2);
 		checkEOF(lexer.next());
 	}
+	
+	@Test
+	//Checking for proper backspace + general parsing.
+	//TODO: add check for proper text (see escape sequence tests)
+	public void testStringLit1() throws LexicalException {
+		String input = "\"hen\\blo\"";
+		show(input);
+		ILexer lexer = getLexer(input);
+		IToken t = lexer.next();
+		String value = t.getStringValue();
+		show("getStringValueChars=    " + getASCII(value));
+		String expectedStringValue = "hen\blo";
+		show("expectedStringValueChars=    " + getASCII(expectedStringValue));
+		assertEquals(expectedStringValue, value);
+		checkEOF(lexer.next());
+	}
 
 	//Example for testing input with an illegal character
 	@Test
@@ -527,7 +543,7 @@ public class LexerTests {
 		String input = "b4.23";
 		show(input);
 		ILexer lexer = getLexer(input);
-		checkIdent(lexer.next(), "b", 0,0);
+		checkIdent(lexer.next(), "b4", 0,0);
 		assertThrows(LexicalException.class, () -> {
 			lexer.next();
 		});

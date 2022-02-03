@@ -259,6 +259,11 @@ public class Lexer implements ILexer {
 							colNum = 0;
 							break;
 						}
+						case '\t' -> {
+							position++;
+							colNum++;
+							break;
+						}
 						case ' ' -> {
 							position++;
 							colNum++;
@@ -351,7 +356,7 @@ public class Lexer implements ILexer {
 							}
 							break;
 						}
-						default -> {
+						default -> {  //Unsure if we need this in the case of string literals
 							position++;
 							break;
 						}
