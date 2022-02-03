@@ -13,6 +13,7 @@ import edu.ufl.cise.plc.IToken.Kind;
 public class Lexer implements ILexer {
 	HashMap<String, Kind> reservedWords;
 	private String inputString;
+	private boolean flag = false;
 	private int position = 0;
 	private States state;
 	private ArrayList<IToken> tokenArr = new ArrayList<IToken>();
@@ -88,16 +89,19 @@ public class Lexer implements ILexer {
 		while(true) {
 			if(inputString.length() > position) {
 				ch = inputString.charAt(position);  // get current character
-
 			}
 			else {
-				ch = '0';
-				//state = States.END;
+				ch ='~';
+				flag = true;
 			}
 			//startPos = position; //maybe do this  when start happens, i feel like startPos resets after every while run
 			// will be detrimental to values that need more than one char. Maybe, update startpos to position to the start case, tell if wrong;
 			switch(state) {
 				case START -> {
+					if(flag){
+						state = States.END;
+						continue;
+					}
 					startPos = position;  // change this if needed
 					switch(ch) {
 						case '+' -> {
@@ -225,8 +229,7 @@ public class Lexer implements ILexer {
 						}
 						case '0' -> {
 							//this needs to be fixed
-							tokenArr.add(new Token(Kind.EOF, startPos, 1, String.valueOf('h'), lineNum, colNum)); // For EOF I think string doesn't matter?
-							state = States.END;
+
 							break;
 						}
 						default -> throw new IllegalStateException("Lexer bug (START)");
@@ -490,42 +493,31 @@ public class Lexer implements ILexer {
 					}
 				}
 
-
-
-
-
-
-
-
 				// Need to determine if '!' or '!='
 				case HAVE_BANG -> {
-					// Check for end of file
-					if(inputString.length() > position) {
-						ch = inputString.charAt(position);  // get current character
-					}
-					// This would be a string like "HI!"
-					else {
-						tokenArr.add(new Token(Kind.BANG, startPos, 1, String.valueOf(ch), lineNum, colNum));
-						state = States.START;
-						break;
-					}
-					if(ch == '=') {
-						tokenArr.add(new Token(Kind.NOT_EQUALS, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
-						//check if input positioning is right
-						position++;
-						colNum++;
-						state = States.START;
-					}
-					else if(ch != '=') {
-						tokenArr.add(new Token(Kind.BANG, startPos, 1, String.valueOf(ch), lineNum, colNum));
-						state = States.START;
-						// DONT INCREMENT POSITION HERE!
-					}
-					else {
-						throw new IllegalStateException("Lexer bug (HAVE_BANG)");
+					switch (ch) {
+						case '='-> {
+							tokenArr.add(new Token(Kind.NOT_EQUALS, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
+							//check if input positioning is right
+							position++;
+							colNum++;
+							state = States.START;
+						}
+
+						default -> {
+							tokenArr.add(new Token(Kind.BANG, startPos, 1, String.valueOf(ch), lineNum, colNum));
+							state = States.START;
+						}
+
+
 					}
 				}
+				case END ->{
 
+					tokenArr.add(new Token(Kind.EOF, startPos, 1, String.valueOf('h'), lineNum, colNum)); // For EOF I think string doesn't matter?
+					break;
+
+				}
 
 
 				default -> throw new IllegalStateException("Lexer bug");
