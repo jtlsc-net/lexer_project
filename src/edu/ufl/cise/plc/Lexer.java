@@ -42,6 +42,8 @@ public class Lexer implements ILexer {
 
 	// Note that returning interface allows a function to return anything that implements
 	// that interface.
+	
+	// Note I think that this 
 	@Override
 	public IToken next() throws LexicalException {
 		reservedWords= new HashMap<String, Kind>();;
@@ -80,6 +82,8 @@ public class Lexer implements ILexer {
 		reservedWords.put("getBlue",Kind.COLOR_OP);
 		char ch;
 		int startPos=0;
+		int lineNum = 0;
+		int colNum = 0;
 		state = States.START;
 		while(true) {
 			if(inputString.length() > position) {
@@ -97,8 +101,9 @@ public class Lexer implements ILexer {
 					startPos = position;  // change this if needed
 					switch(ch) {
 						case '+' -> {
-							tokenArr.add(new Token(Kind.PLUS, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.PLUS, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
+							colNum++;
 							break;
 						}
 						case 'a', 'A' ,'b', 'B', 'c', 'C', 'd', 'D', 'e','E' ,'f', 'F','g','G','h','H',
@@ -117,57 +122,57 @@ public class Lexer implements ILexer {
 
 
 						case ';' -> {
-							tokenArr.add(new Token(Kind.SEMI, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.SEMI, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case '|' -> {
-							tokenArr.add(new Token(Kind.OR, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.OR, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case '%' -> {
-							tokenArr.add(new Token(Kind.MOD, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.MOD, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case '^' -> {
-							tokenArr.add(new Token(Kind.RETURN, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.RETURN, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case '&' -> {
-							tokenArr.add(new Token(Kind.AND, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.AND, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case ',' -> {
-							tokenArr.add(new Token(Kind.COMMA, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.COMMA, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case '/' -> {
-							tokenArr.add(new Token(Kind.DIV, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.DIV, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case '(' -> {
-							tokenArr.add(new Token(Kind.LPAREN, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.LPAREN, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case ')' -> {
-							tokenArr.add(new Token(Kind.RPAREN, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.RPAREN, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case '[' -> {
-							tokenArr.add(new Token(Kind.LSQUARE, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.LSQUARE, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
 						case ']' -> {
-							tokenArr.add(new Token(Kind.RSQUARE, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.RSQUARE, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
@@ -180,7 +185,7 @@ public class Lexer implements ILexer {
 							break;
 						}
 						case '*' -> {
-							tokenArr.add(new Token(Kind.TIMES, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.TIMES, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							position++;
 							break;
 						}
@@ -207,10 +212,20 @@ public class Lexer implements ILexer {
 
 						}
 
-
+						case '\n' -> {
+							position++;
+							lineNum++;
+							colNum = 0;
+							break;
+						}
+						case ' ' -> {
+							position++;
+							lineNum++;
+							break;
+						}
 						case '0' -> {
 							//this needs to be fixed
-							tokenArr.add(new Token(Kind.EOF, startPos, 1, String.valueOf('h'))); // For EOF I think string doesn't matter?
+							tokenArr.add(new Token(Kind.EOF, startPos, 1, String.valueOf('h'), lineNum, colNum)); // For EOF I think string doesn't matter?
 							state = States.END;
 							break;
 						}
@@ -230,16 +245,17 @@ public class Lexer implements ILexer {
 							//	System.out.println(value + " ");
 							//	System.out.println(this.reservedWords.size());
 							position++;
+							colNum++;
 							//consider making a universal value variable
 							String value = inputString.substring(startPos, position);
 							//removed later if unnecessary
 							if(inputString.length() <= position) {
 								if (reservedWords.containsKey(value)) {
-									tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value));
+									tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value, lineNum, colNum));
 									state = state.START;
 								} else {
 
-									tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value));
+									tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value, lineNum, colNum));
 									state = state.START;
 								}
 							}
@@ -252,11 +268,11 @@ public class Lexer implements ILexer {
 							//	System.out.println("test");
 							String value = inputString.substring(startPos, position);
 							if (reservedWords.containsKey(value)) {
-								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value));
+								tokenArr.add(new Token(reservedWords.get(value), startPos, position - startPos, value, lineNum, colNum));
 								state=state.START;
 							} else {
 
-								tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value));
+								tokenArr.add(new Token(Kind.IDENT, startPos, position - startPos, value, lineNum, colNum));
 								state = state.START;                                                //check if right
 							}
 
@@ -274,21 +290,23 @@ public class Lexer implements ILexer {
 								String value = inputString.substring(startPos, position);
 
 
-								tokenArr.add(new Token(Kind.INT_LIT, startPos, position - startPos, value));
+								tokenArr.add(new Token(Kind.INT_LIT, startPos, position - startPos, value, lineNum, colNum));
 								state = state.START;
 							}else {
 
 								position++;
+								colNum++;
 							}
 						}
 						case '.'->{
 							position++;
+							colNum++;
 							state = States.IN_FLOAT;
 
 						}
 						default ->{
 							//System.out.println(inputString.substring(startPos, position));
-							tokenArr.add(new Token(Kind.INT_LIT,startPos, position-startPos, inputString.substring(startPos, position)));
+							tokenArr.add(new Token(Kind.INT_LIT,startPos, position-startPos, inputString.substring(startPos, position), lineNum, colNum));
 							state=state.START;												//check if right
 						}
 
@@ -302,15 +320,16 @@ public class Lexer implements ILexer {
 							if(inputString.length() <= position){
 								//if over end
 								String value = inputString.substring(startPos, position);
-								tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, value));
+								tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, value, lineNum, colNum));
 								state = state.START;
 							}else {
 								position++;
+								colNum++;
 							}
 
 						}
 						default -> {
-							tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, inputString.substring(startPos, position)));
+							tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, inputString.substring(startPos, position), lineNum, colNum));
 							state = state.START;
 						}
 
@@ -320,13 +339,14 @@ public class Lexer implements ILexer {
 				case HAVE_MINUS -> {
 					switch (ch){
 						case '>'->{
-							tokenArr.add(new Token(Kind.RARROW, startPos, 2, inputString.substring(startPos, position)));
+							tokenArr.add(new Token(Kind.RARROW, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
 							position++;
+							colNum++;
 							state=States.START;
 							break;
 						}
 						default -> {
-							tokenArr.add(new Token(Kind.MINUS, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.MINUS, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							state= state.START;
 						}
 
@@ -336,9 +356,10 @@ public class Lexer implements ILexer {
 				case HAVE_EQ -> {
 					switch(ch){
 						case'='->{
-							tokenArr.add(new Token(Kind.EQUALS, startPos, 2, inputString.substring(startPos, position)));
+							tokenArr.add(new Token(Kind.EQUALS, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
 							state= state.START;
 							position++;
+							colNum++;
 							break;
 						}
 						default -> {
@@ -376,26 +397,29 @@ public class Lexer implements ILexer {
 				case HAVE_LESS ->{
 					switch(ch){
 						case'='-> {
-							tokenArr.add(new Token(Kind.LE, startPos, 2, inputString.substring(startPos, position)));
+							tokenArr.add(new Token(Kind.LE, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
 							position++;
+							colNum++;
 							state = States.START;
 							break;
 						}
 						case '<'->{
-							tokenArr.add(new Token(Kind.LANGLE, startPos, 2, inputString.substring(startPos, position)));
+							tokenArr.add(new Token(Kind.LANGLE, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
 							position++;
+							colNum++;
 							state = States.START;
 							break;
 						}
 						case '-'->{
-							tokenArr.add(new Token(Kind.LARROW, startPos, 2, inputString.substring(startPos, position)));
+							tokenArr.add(new Token(Kind.LARROW, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
 							position++;
+							colNum++;
 							state=States.START;
 							break;
 
 						}
 						default -> {
-							tokenArr.add(new Token(Kind.LT, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.LT, startPos, 1, String.valueOf(ch), lineNum, colNum));
 
 							state= state.START;
 
@@ -405,19 +429,21 @@ public class Lexer implements ILexer {
 				case HAVE_GREAT ->{
 					switch(ch){
 						case'='-> {
-							tokenArr.add(new Token(Kind.GE, startPos, 2, inputString.substring(startPos, position)));
+							tokenArr.add(new Token(Kind.GE, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
 							state = States.START;
 							position++;
+							colNum++;
 							break;
 						}
 						case '>'->{
-							tokenArr.add(new Token(Kind.RANGLE, startPos, 2, inputString.substring(startPos, position)));
+							tokenArr.add(new Token(Kind.RANGLE, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
 							state = States.START;
 							position++;
+							colNum++;
 							break;
 						}
 						default -> {
-							tokenArr.add(new Token(Kind.GT, startPos, 1, String.valueOf(ch)));
+							tokenArr.add(new Token(Kind.GT, startPos, 1, String.valueOf(ch), lineNum, colNum));
 							state= state.START;
 
 						}
@@ -439,18 +465,19 @@ public class Lexer implements ILexer {
 					}
 					// This would be a string like "HI!"
 					else {
-						tokenArr.add(new Token(Kind.BANG, startPos, 1, String.valueOf(ch)));
+						tokenArr.add(new Token(Kind.BANG, startPos, 1, String.valueOf(ch), lineNum, colNum));
 						state = States.START;
 						break;
 					}
 					if(ch == '=') {
-						tokenArr.add(new Token(Kind.NOT_EQUALS, startPos, 2, inputString.substring(startPos, position)));
+						tokenArr.add(new Token(Kind.NOT_EQUALS, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
 						//check if input positioning is right
 						position++;
+						colNum++;
 						state = States.START;
 					}
 					else if(ch != '=') {
-						tokenArr.add(new Token(Kind.BANG, startPos, 1, String.valueOf(ch)));
+						tokenArr.add(new Token(Kind.BANG, startPos, 1, String.valueOf(ch), lineNum, colNum));
 						state = States.START;
 						// DONT INCREMENT POSITION HERE!
 					}
