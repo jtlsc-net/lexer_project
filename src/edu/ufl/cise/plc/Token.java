@@ -41,12 +41,12 @@ public class Token implements IToken {
 //		return null;
 	}
 	
-	private SourceLocation findSource(int startPosition, int tokenLength, String inputString) {
-		boolean inEscape = false;
-		int line = 0;
-		int column = 0;
-		for(int i = 0; i < startPosition; i++) {
-			char a = inputString.charAt(i);
+//	private SourceLocation findSource(int startPosition, int tokenLength, String inputString) {
+//		boolean inEscape = false;
+//		int line = 0;
+//		int column = 0;
+//		for(int i = 0; i < startPosition; i++) {
+//			char a = inputString.charAt(i);
 //        if(inEscape & (a == 'r' | a == 'n')) {
 //            line++;
 //            column = -1;
@@ -60,18 +60,18 @@ public class Token implements IToken {
 //        }
 
 
-			if(a == '\n') {
-				line++;
-				column = -1;
-			}
-			else if(a == '\r') {
-				line++;
-				column = -1;
-			}
-			column++;
-		}
-		return new SourceLocation(line, column);
-	}
+//			if(a == '\n') {
+//				line++;
+//				column = -1;
+//			}
+//			else if(a == '\r') {
+//				line++;
+//				column = -1;
+//			}
+//			column++;
+//		}
+//		return new SourceLocation(line, column);
+//	}
 
 	@Override
 	public int getIntValue() {
@@ -87,7 +87,7 @@ public class Token implements IToken {
 	@Override
 	public boolean getBooleanValue() {
 		// TODO Auto-generated method stub
-		return false;
+		return Boolean.parseBoolean(input);
 	}
 
 	@Override
