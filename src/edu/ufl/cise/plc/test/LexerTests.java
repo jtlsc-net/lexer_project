@@ -246,6 +246,16 @@ public class LexerTests {
 		show(input);
 		ILexer lexer = getLexer(input);
 		checkToken(lexer.next(), Kind.KW_VOID);
+		checkToken(lexer.next(), Kind.PLUS);
+	}
+	
+	@Test
+	//TODO update with better example.
+	public void testSlashN() throws LexicalException {
+		String input = "\n+";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.PLUS, 1,0);
 	}
 
 
