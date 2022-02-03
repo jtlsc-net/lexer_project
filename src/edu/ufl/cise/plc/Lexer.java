@@ -313,6 +313,7 @@ public class Lexer implements ILexer {
 					}
 				}
 				case IN_NUM -> {
+					boolean inNumError = false;
 					switch(ch){
 						case '0','1','2','3','4','5','6','7','8','9'->{
 							// Case of 00, 01, etc., adding 0 found in START.
@@ -328,10 +329,21 @@ public class Lexer implements ILexer {
 
 								String value = inputString.substring(startPos, position);
 
-
-								tokenArr.add(new Token(Kind.INT_LIT, startPos, position - startPos, value, lineNum, colNum));
-								colNum = colNum + (position - startPos);
-								state = state.START;
+								try {
+									Integer.valueOf(value);
+								}
+								catch(NumberFormatException e) {
+									inNumError = true;
+								}
+								if(!inNumError) {
+									tokenArr.add(new Token(Kind.INT_LIT, startPos, position - startPos, value, lineNum, colNum));
+									colNum = colNum + (position - startPos);
+									state = States.START;
+								}
+								else {
+									tokenArr.add(new Token(Kind.ERROR, startPos, position - startPos, "Int too large", lineNum, colNum));
+									state = States.END;
+								}
 							}else {
 
 								position++;
@@ -343,33 +355,72 @@ public class Lexer implements ILexer {
 						}
 						default ->{
 							//System.out.println(inputString.substring(startPos, position));
-							tokenArr.add(new Token(Kind.INT_LIT,startPos, position-startPos, inputString.substring(startPos, position), lineNum, colNum));
-							colNum = colNum + (position - startPos);
-							state=state.START;												//check if right
+							String value = inputString.substring(startPos, position);
+							try {
+								Integer.valueOf(value);
+							}
+							catch(NumberFormatException e) {
+								inNumError = true;
+							}
+							if(!inNumError) {
+								tokenArr.add(new Token(Kind.INT_LIT,startPos, position-startPos, value, lineNum, colNum));
+								colNum = colNum + (position - startPos);
+								state=States.START;		
+							}
+							else {
+								tokenArr.add(new Token(Kind.ERROR, startPos, position - startPos, "Int too large", lineNum, colNum));
+								state = States.END;
+							}
+																	//check if right
 						}
 
 					}
 
 				}
 				case IN_FLOAT -> {
+					boolean inFloatError = false;
 					switch (ch) {
 						case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
-							//still need to consider cases with leading 0s at end of decimal
 							if(inputString.length() <= position){
 								//if over end
 								String value = inputString.substring(startPos, position);
-								tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, value, lineNum, colNum));
-								colNum = colNum + (position - startPos);
-								state = state.START;
+								try {
+									Float.valueOf(value);
+								}
+								catch(NumberFormatException e) {
+									inFloatError = true;
+								}
+								if(!inFloatError) {	
+									tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, value, lineNum, colNum));
+									colNum = colNum + (position - startPos);
+									state = States.START;
+								}
+								else {
+									tokenArr.add(new Token(Kind.ERROR, startPos, position - startPos, "Float too large", lineNum, colNum));
+									state = States.END;
+								}
 							}else {
 								position++;
 							}
 
 						}
 						default -> {
-							tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, inputString.substring(startPos, position), lineNum, colNum));
-							colNum = colNum + (position - startPos);
-							state = state.START;
+							String value = inputString.substring(startPos, position);
+							try {
+								Float.valueOf(value);
+							}
+							catch(NumberFormatException e) {
+								inFloatError = true;
+							}
+							if(!inFloatError) {	
+								tokenArr.add(new Token(Kind.FLOAT_LIT, startPos, position - startPos, value, lineNum, colNum));
+								colNum = colNum + (position - startPos);
+								state = States.START;
+							}
+							else {
+								tokenArr.add(new Token(Kind.ERROR, startPos, position - startPos, "Float too large", lineNum, colNum));
+								state = States.END;
+							}
 						}
 
 					}
@@ -394,21 +445,52 @@ public class Lexer implements ILexer {
 				}
 
 				case HAVE_EQ -> {
-					switch(ch){
-						case'='->{
-							tokenArr.add(new Token(Kind.EQUALS, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
-							state= state.START;
-							position++;
-							colNum = colNum + 2;
-							break;
-						}
-//						default -> {
-//							throw new IllegalStateException("Lexer bug (HAVE_EQUAL)");
+//					switch(ch){
+//						case'='->{
+//							tokenArr.add(new Token(Kind.EQUALS, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
+//							state= state.START;
+//							position++;
+//							colNum = colNum + 2;
+//							break;
 //						}
-						default -> {
-							tokenArr.add(new Token(Kind.ERROR, startPos, 1, "ERROR in HAVE_EQ state.", lineNum, colNum));
-							state = States.END;
-						}
+////						default -> {
+////							throw new IllegalStateException("Lexer bug (HAVE_EQUAL)");
+////						}
+//						default -> {
+//							tokenArr.add(new Token(Kind.ERROR, startPos, 1, "ERROR in HAVE_EQ state.", lineNum, colNum));
+//							state = States.END;
+//						}
+					
+					
+					if(inputString.length() > position) {
+						ch = inputString.charAt(position);  // get current character
+					}
+					// This would be a string like "HI!"
+					else {
+						tokenArr.add(new Token(Kind.ASSIGN, startPos, 1, String.valueOf(ch), lineNum, colNum));
+						colNum++;
+						state = States.START;
+						break;
+					}
+					if(ch == '=') {
+						tokenArr.add(new Token(Kind.EQUALS, startPos, 2, inputString.substring(startPos, position), lineNum, colNum));
+						//check if input positioning is right
+						position++;
+						colNum = colNum + 2;
+						state = States.START;
+					}
+					else if(ch != '=') {
+						tokenArr.add(new Token(Kind.ASSIGN, startPos, 1, String.valueOf(ch), lineNum, colNum));
+						colNum++;
+						state = States.START;
+						// DONT INCREMENT POSITION HERE!
+					}
+//					else {
+//						throw new LexicalException("Lexer bug (HAVE_BANG)");
+//					}
+					else {
+						tokenArr.add(new Token(Kind.ERROR, startPos, 1, "ERROR in HAVE_EQUALS state.", lineNum, colNum));
+						state = States.END;
 					}
 
 

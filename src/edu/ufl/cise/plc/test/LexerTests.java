@@ -12,6 +12,7 @@ import edu.ufl.cise.plc.IToken;
 import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.LexicalException;
 
+import java.util.Arrays;
 
 public class LexerTests {
 
@@ -27,6 +28,14 @@ public class LexerTests {
 		}
 	}
 
+	String getASCII(String s) {
+		int[] ascii = new int[s.length()];
+		for (int i = 0; i != s.length(); i++) {
+			ascii[i] = s.charAt(i);
+		}
+		return Arrays.toString(ascii);
+	}
+	
 	//check that this token has the expected kind
 	void checkToken(IToken t, Kind expectedKind) {
 		assertEquals(expectedKind, t.getKind());
@@ -61,6 +70,16 @@ public class LexerTests {
 		checkInt(t,expectedValue);
 		assertEquals(new IToken.SourceLocation(expectedLine,expectedColumn), t.getSourceLocation());
 	}
+	
+	void checkFloat(IToken t, float expectedValue) {
+		assertEquals(Kind.FLOAT_LIT, t.getKind());
+		assertEquals(expectedValue, t.getFloatValue());
+	}
+	
+	void checkFloat(IToken t, float expectedValue, int expectedLine, int expectedColumn) {
+		checkFloat(t, expectedValue);
+		assertEquals(new IToken.SourceLocation(expectedLine, expectedColumn), t.getSourceLocation());
+	}
 
 	//check that this token is the EOF token
 	void checkEOF(IToken t) {
@@ -93,6 +112,7 @@ public class LexerTests {
 		checkToken(lexer.next(), Kind.INT_LIT,1,1);
 		checkToken(lexer.next(), Kind.INT_LIT,2,0);
 		checkToken(lexer.next(), Kind.INT_LIT,2,1);
+		checkEOF(lexer.next());
 	}
 
 	//Just a plus.
@@ -237,6 +257,31 @@ public class LexerTests {
 		checkIdent(lexer.next(), "b",0,8);
 		checkEOF(lexer.next());
 	}
+	
+	@Test
+	public void testIdentFloat() throws LexicalException {
+		String input = """
+				a123 4.56b
+				""";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkIdent(lexer.next(), "a123", 0,0);
+		checkFloat(lexer.next(), (float)4.56, 0,5);
+		checkIdent(lexer.next(), "b", 0,9);
+		checkEOF(lexer.next());
+	}
+	
+	// Lexer cannot handle period if part of ident.
+	@Test
+	public void testPeriod() throws LexicalException {
+		String input = "b4.23";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkIdent(lexer.next(), "b", 0,0);
+		assertThrows(LexicalException.class, () -> {
+			lexer.next();
+		});
+	}
 
 
 	//example showing how to handle number that are too big.
@@ -248,16 +293,31 @@ public class LexerTests {
 				""";
 		ILexer lexer = getLexer(input);
 		checkInt(lexer.next(),42);
-		Exception e = assertThrows(LexicalException.class, () -> {
+		assertThrows(LexicalException.class, () -> {
 			lexer.next();
 		});
 	}
+	
+	@Test
+	// Float too big
+	public void testFloatTooBig() throws LexicalException {
+		String input = """
+				4.2
+				99999999999999999999999999999999999999999999999999999999999999.9
+				""";
+		ILexer lexer = getLexer(input);
+		checkFloat(lexer.next(),(float)4.2,0,0);
+		assertThrows(LexicalException.class, () -> {
+			lexer.next();
+		});
+	}
+	
 	@Test
 	public void testNumber() throws LexicalException {
 		String input = "123456";
 		ILexer lexer = getLexer(input);
 		checkInt(lexer.next(),123456);
-
+		checkEOF(lexer.next());
 	}
 	@Test
 	public void testVoidName() throws LexicalException {
@@ -266,6 +326,7 @@ public class LexerTests {
 		ILexer lexer = getLexer(input);
 		checkToken(lexer.next(), Kind.KW_VOID);
 		checkToken(lexer.next(), Kind.PLUS);
+		checkEOF(lexer.next());
 	}
 	
 	@Test
@@ -275,6 +336,7 @@ public class LexerTests {
 		show(input);
 		ILexer lexer = getLexer(input);
 		checkToken(lexer.next(), Kind.PLUS, 1,0);
+		checkEOF(lexer.next());
 	}
 	
 	@Test
@@ -285,6 +347,7 @@ public class LexerTests {
 		ILexer lexer = getLexer(input);
 		checkToken(lexer.next(), Kind.IDENT,0,0);
 		checkToken(lexer.next(), Kind.IDENT,1,0);
+		checkEOF(lexer.next());
 	}
 	
 	@Test
@@ -294,6 +357,7 @@ public class LexerTests {
 		show(input);
 		ILexer lexer = getLexer(input);
 		checkToken(lexer.next(), Kind.IDENT,0,0);
+		checkEOF(lexer.next());
 	}
 	
 	@Test
@@ -305,6 +369,47 @@ public class LexerTests {
 		checkToken(lexer.next(), Kind.MINUS,0,0);
 		checkToken(lexer.next(), Kind.RARROW,0,1);
 		checkToken(lexer.next(), Kind.MINUS,0,3);
+		checkEOF(lexer.next());
+	}
+	
+	// Test made by professor for escape sequences.
+	@Test
+	public void testEscapeSequences0() throws LexicalException {
+		String input = "\"\\b \\t \\n \\f \\r \"";
+		show(input);
+		show("input chars= " + getASCII(input));
+		ILexer lexer = getLexer(input);
+		IToken t = lexer.next();
+		String val = t.getStringValue();
+		show("getStringValueChars=     " + getASCII(val));
+		String expectedStringValue = "\b \t \n \f \r ";
+		show("expectedStringValueChars=" + getASCII(expectedStringValue));
+		assertEquals(expectedStringValue, val);
+		String text = t.getText();
+		show("getTextChars=     " +getASCII(text));
+		String expectedText = "\"\\b \\t \\n \\f \\r \"";
+		show("expectedTextChars="+getASCII(expectedText));
+		assertEquals(expectedText,text);
+	}
+	
+	// Another test made by professor for escape sequences.
+	@Test
+	public void testEscapeSequences1() throws LexicalException {
+		String input = "   \" ...  \\\"  \\\'  \\\\  \"";
+		show(input);
+		show("input chars= " + getASCII(input));
+		ILexer lexer = getLexer(input);
+		IToken t = lexer.next();
+		String val = t.getStringValue();
+		show("getStringValueChars=     " + getASCII(val));
+		String expectedStringValue = " ...  \"  \'  \\  ";
+		show("expectedStringValueChars=" + getASCII(expectedStringValue));
+		assertEquals(expectedStringValue, val);
+		String text = t.getText();
+		show("getTextChars=     " +getASCII(text));
+		String expectedText = "\" ...  \\\"  \\\'  \\\\  \""; //almost the same as input, but white space is omitted
+		show("expectedTextChars="+getASCII(expectedText));
+		assertEquals(expectedText,text);		
 	}
 
 
