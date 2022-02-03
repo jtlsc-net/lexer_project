@@ -417,7 +417,7 @@ public class LexerTests {
 				""";
 		show(input);
 		ILexer lexer = getLexer(input);
-		checkToken(lexer.next(), Kind.STRING_LIT, 0,0);
+		checkToken(lexer.next(), Kind.STRING_LIT, 0,0, "This is a string");
 		checkToken(lexer.next(), Kind.TIMES, 2,0);
 		checkEOF(lexer.next());
 	}
@@ -428,6 +428,18 @@ public class LexerTests {
 		show(input);
 		ILexer lexer = getLexer(input);
 		checkToken(lexer.next(), Kind.TIMES, 1,0);
+		checkEOF(lexer.next());
+	}
+	
+	@Test
+	public void testEmptyStringLit() throws LexicalException {
+		String input = """
+				""*
+				""";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.STRING_LIT, 0,0, "");
+		checkToken(lexer.next(), Kind.TIMES, 0,2);
 		checkEOF(lexer.next());
 	}
 

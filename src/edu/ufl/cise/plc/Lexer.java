@@ -33,6 +33,7 @@ public class Lexer implements ILexer {
 		HAVE_GREAT,
 		HAVE_LESS,
 		HAVE_COMMENT,
+		HAVE_STRING_LIT,
 		
 		END
 	}
@@ -95,7 +96,7 @@ public class Lexer implements ILexer {
 				ch = 'h';
 				state = States.END;
 			}
-			else if(state != States.START) {}
+			else if(state != States.START) {}  // State-based eof handling.
 			else {
 //				throw new LexicalException("Position error. Position: " + String.valueOf(position));
 				tokenArr.add(new Token(Kind.ERROR, startPos, 1, "Position error. Position: " + String.valueOf(position), lineNum, colNum));
@@ -241,6 +242,11 @@ public class Lexer implements ILexer {
 							position++;
 							break;
 						}
+						case '"' -> {
+							state = States.HAVE_STRING_LIT;
+							position++;
+							break;
+						}
 						case '\n' -> {
 							position++;
 							lineNum++;
@@ -319,6 +325,36 @@ public class Lexer implements ILexer {
 						}
 
 
+					}
+				}
+				//TODO: add extra coverage for escape chars in string lit.  in particular doesn't handle newline in string lit.
+				case HAVE_STRING_LIT -> {
+					if(inputString.length() <= position) {
+						tokenArr.add(new Token(Kind.ERROR, startPos, 1, "EOF error in HAVE_STRING_LIT state.", lineNum, colNum));
+						state= States.END;
+						break;
+					}
+					switch(ch) {
+						case '"' -> {
+							if(position - startPos < 0) { // case for "", an empty string literal
+								tokenArr.add(new Token(Kind.STRING_LIT, startPos, 0, "", lineNum, colNum));
+								colNum = colNum + 2;
+								position++;
+								state = States.START;
+							}
+							else {
+								String value = inputString.substring(startPos + 1, position);
+								tokenArr.add(new Token(Kind.STRING_LIT, startPos + 1, position - (startPos + 1), value, lineNum, colNum));
+								position++;
+								colNum = colNum + (position - startPos);
+								state = States.START;
+							}
+							break;
+						}
+						default -> {
+							position++;
+							break;
+						}
 					}
 				}
 				case HAVE_COMMENT -> {
