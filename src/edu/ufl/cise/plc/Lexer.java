@@ -32,20 +32,12 @@ public class Lexer implements ILexer {
 		IN_INDENT,
 		HAVE_GREAT,
 		HAVE_LESS,
-
+		
 		END
 	}
 
-	public Lexer(String input) {
+	public Lexer(String input){
 		this.inputString = input;
-	}
-
-	// Note that returning interface allows a function to return anything that implements
-	// that interface.
-	
-	// Note I think that this 
-	@Override
-	public IToken next() throws LexicalException {
 		reservedWords= new HashMap<String, Kind>();;
 		reservedWords.put("BLACK", Kind.COLOR_CONST);
 		reservedWords.put("BLUE",  Kind.COLOR_CONST);
@@ -90,7 +82,7 @@ public class Lexer implements ILexer {
 			if(state != States.IN_NUM) {
 				haveZero = false;
 			}
-			if(inputString.length() > position) {
+			if(inputString.length() > position & state != States.END) {
 				ch = inputString.charAt(position);  // get current character
 
 			}
@@ -106,7 +98,9 @@ public class Lexer implements ILexer {
 				ch = ch;
 			}
 			else {
-				throw new LexicalException("Position error. Position: " + String.valueOf(position));
+//				throw new LexicalException("Position error. Position: " + String.valueOf(position));
+				tokenArr.add(new Token(Kind.ERROR, startPos, 1, "Position error. Position: " + String.valueOf(position), lineNum, colNum));
+				state = States.END;
 			}
 			//startPos = position; //maybe do this  when start happens, i feel like startPos resets after every while run
 			// will be detrimental to values that need more than one char. Maybe, update startpos to position to the start case, tell if wrong;
@@ -259,7 +253,11 @@ public class Lexer implements ILexer {
 //							tokenArr.add(new Token(Kind.ERROR, startPos, 1, "unused", lineNum, colNum));
 //							break;
 //						}
-						default -> throw new LexicalException("ERROR in START state.  Most likely invalid char.");
+//						default -> throw new LexicalException("ERROR in START state.  Most likely invalid char.");
+						default -> {
+							tokenArr.add(new Token(Kind.ERROR, startPos, 1, "ERROR in START state. Most likely invalid char.", lineNum, colNum));
+							state = States.END;
+						}
 					}
 				}
 
@@ -404,8 +402,12 @@ public class Lexer implements ILexer {
 							colNum = colNum + 2;
 							break;
 						}
+//						default -> {
+//							throw new IllegalStateException("Lexer bug (HAVE_EQUAL)");
+//						}
 						default -> {
-							throw new IllegalStateException("Lexer bug (HAVE_EQUAL)");
+							tokenArr.add(new Token(Kind.ERROR, startPos, 1, "ERROR in HAVE_EQ state.", lineNum, colNum));
+							state = States.END;
 						}
 					}
 
@@ -526,8 +528,12 @@ public class Lexer implements ILexer {
 						state = States.START;
 						// DONT INCREMENT POSITION HERE!
 					}
+//					else {
+//						throw new LexicalException("Lexer bug (HAVE_BANG)");
+//					}
 					else {
-						throw new LexicalException("Lexer bug (HAVE_BANG)");
+						tokenArr.add(new Token(Kind.ERROR, startPos, 1, "ERROR in HAVE_BANG state.", lineNum, colNum));
+						state = States.END;
 					}
 				}
 				
@@ -537,17 +543,33 @@ public class Lexer implements ILexer {
 				}
 
 
-				default -> throw new LexicalException("Unknow lexer bug.  I am the default case of the main switch statement.");
+//				default -> throw new LexicalException("Unknow lexer bug.  I am the default case of the main switch statement.");
+				default -> {
+					tokenArr.add(new Token(Kind.ERROR, startPos, 1, "ERROR in main switch statemnt.", lineNum, colNum));
+					state = States.END;
+				}
 			}
 			if(state == States.END) {
 				break;
 			}
 
 		}
+	}
+
+	// Note that returning interface allows a function to return anything that implements
+	// that interface.
+	
+	// Note I think that this 
+	@Override
+	public IToken next() throws LexicalException {
+		
 
 		// Find return token
 		if(arrListIndex < tokenArr.size()) {
 			IToken returnToken = tokenArr.get(arrListIndex);
+			if(returnToken.getKind() == Kind.ERROR) {
+				throw new LexicalException(returnToken.getStringValue(), returnToken.getSourceLocation());
+			}
 			arrListIndex++;
 			return returnToken;
 		}

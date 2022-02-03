@@ -191,6 +191,7 @@ public class LexerTests {
 			IToken token = lexer.next();
 		});
 	}
+	
 
 	//Several identifiers to test positions
 	@Test
