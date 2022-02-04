@@ -465,7 +465,7 @@ public class Lexer implements ILexer {
 								String value = inputString.substring(startPos, position);
 
 								try {
-									Float.valueOf(value + "f");
+									Float.parseFloat(value);
 								}
 								catch(NumberFormatException e) {
 									inFloatError = true;
