@@ -38,44 +38,10 @@ public class Token implements IToken {
 	//returns the location in the source code of the first character of the token.
 	public SourceLocation getSourceLocation() {
 		return sourceLocation;
-//		return null;
 	}
-	
-//	private SourceLocation findSource(int startPosition, int tokenLength, String inputString) {
-//		boolean inEscape = false;
-//		int line = 0;
-//		int column = 0;
-//		for(int i = 0; i < startPosition; i++) {
-//			char a = inputString.charAt(i);
-//        if(inEscape & (a == 'r' | a == 'n')) {
-//            line++;
-//            column = -1;
-//            inEscape = false;
-//        }
-//        else if(inEscape) {
-//            inEscape = false;
-//        }
-//        if(a == '\\') {
-//            inEscape = true;
-//        }
-
-
-//			if(a == '\n') {
-//				line++;
-//				column = -1;
-//			}
-//			else if(a == '\r') {
-//				line++;
-//				column = -1;
-//			}
-//			column++;
-//		}
-//		return new SourceLocation(line, column);
-//	}
 
 	@Override
 	public int getIntValue() {
-		// TODO Auto-generated method stub
 		return Integer.parseInt(input);
 	}
 
@@ -86,12 +52,14 @@ public class Token implements IToken {
 
 	@Override
 	public boolean getBooleanValue() {
-		// TODO Auto-generated method stub
 		return Boolean.parseBoolean(input);
 	}
 
 	@Override
 	public String getStringValue() {
+		if(kind == Kind.STRING_LIT) {
+			return input.substring(1, input.length() - 1);
+		}
 		return input;
 	}
 

@@ -1,11 +1,8 @@
 
 package edu.ufl.cise.plc;
-//import java.sql.SQLOutput;
-import java.time.temporal.ValueRange;
 import java.util.*;
 import java.util.ArrayList;
 
-import com.sun.source.tree.Tree;
 import edu.ufl.cise.plc.IToken.Kind;
 
 /* Currently Implemented:
@@ -344,14 +341,14 @@ public class Lexer implements ILexer {
 					switch(ch) {
 						case '"' -> {
 							if(position - startPos < 0) { // case for "", an empty string literal
-								tokenArr.add(new Token(Kind.STRING_LIT, startPos, 0, "", lineNum, colNum));
+								tokenArr.add(new Token(Kind.STRING_LIT, startPos, 2, "", lineNum, colNum));
 								colNum = colNum + 2;
 								position++;
 								state = States.START;
 							}
 							else {
-								String value = inputString.substring(startPos + 1, position);
-								tokenArr.add(new Token(Kind.STRING_LIT, startPos + 1, position - (startPos + 1), value, lineNum, colNum));
+								String value = inputString.substring(startPos, position + 1);
+								tokenArr.add(new Token(Kind.STRING_LIT, startPos, position - (startPos), value, lineNum, colNum));
 								position++;
 								colNum = colNum + (position - startPos);
 								state = States.START;
