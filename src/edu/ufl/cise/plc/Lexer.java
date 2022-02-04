@@ -1,6 +1,7 @@
 
 package edu.ufl.cise.plc;
 //import java.sql.SQLOutput;
+import java.time.temporal.ValueRange;
 import java.util.*;
 import java.util.ArrayList;
 
@@ -26,7 +27,7 @@ public class Lexer implements ILexer {
 		START,
 		HAVE_EQ,
 		HAVE_BANG,
-		HAVE_AND,
+		IS_DOT,
 		IN_NUM,
 		HAVE_MINUS,
 		IN_FLOAT,
@@ -424,16 +425,11 @@ public class Lexer implements ILexer {
 							}
 						}
 						case '.'->{
+							boolean isNum = true;
 							position++;
-							state = States.IN_FLOAT;
-							//	if(position > inputString.length() ||  inputString.charAt(position+1) ){
-							//TODO: CHECK IF NEXT CH IS A NUMBER OR NOT
 
 
-
-							//}
-
-
+							state = States.IS_DOT;
 						}
 						default ->{
 							//System.out.println(inputString.substring(startPos, position));
@@ -508,6 +504,27 @@ public class Lexer implements ILexer {
 						}
 
 					}
+				}
+				case IS_DOT -> {
+					switch (ch){
+						case '0','1','2','3','4','5','6','7','8','9'->{
+
+							state=States.IN_FLOAT;
+
+						}
+						default->{
+							tokenArr.add(new Token(Kind.ERROR, startPos, position - startPos, "No Value after decimal", lineNum, colNum));
+							state = States.END;
+						}
+
+
+
+
+
+
+					}
+
+
 				}
 
 				case HAVE_MINUS -> {
