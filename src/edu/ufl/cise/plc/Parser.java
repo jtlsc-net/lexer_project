@@ -1,6 +1,8 @@
 package edu.ufl.cise.plc;
 
 import edu.ufl.cise.plc.ast.ASTNode;
+import edu.ufl.cise.plc.ast.Expr;
+
 import java.util.*;
 
 public class Parser implements IParser {
@@ -17,7 +19,7 @@ public class Parser implements IParser {
 
 
     }
-    void EXP(IToken token){
+    void expr(){
 
         if()
 
@@ -27,14 +29,40 @@ public class Parser implements IParser {
 
     }
     void LogicalOrExpr(){
+        LogicalAndExpr ();
+        while (isKind(IToken.Kind.OR)){
+            consume(IToken.Kind.OR,"");    //what to put in message?
+
+            LogicalAndExpr ();
+        }
+        return;
 
     }
 
     void LogicalAndExpr(){
+        ComparisonExpr ();
+        while (isKind(IToken.Kind.AND)){
+            consume(IToken.Kind.AND,"");    //what to put in message?
+
+            ComparisonExpr ();
+        }
+        return;
+    }
+    void ComparisonExpr (){
 
     }
     void AdditiveExpr (){
-
+        MultiplicativeExpr();
+        while (isKind(IToken.Kind.PLUS, IToken.Kind.MINUS)){
+            if(isKind(IToken.Kind.PLUS)) {
+                consume(IToken.Kind.PLUS,"");    //what to put in message?
+            }
+            else{//else if or else
+                consume(IToken.Kind.MINUS,"");
+            }
+            MultiplicativeExpr();
+        }
+        return;
     }
     void MultiplicativeExpr(){
         UnaryExpr();
@@ -59,8 +87,35 @@ public class Parser implements IParser {
 
     }
     void PixelSelector(){
+        if(isKind(IToken.Kind.BOOLEAN_LIT)){
+            consume(IToken.Kind.BOOLEAN_LIT,"");
 
+        }
+        else if(isKind(IToken.Kind.STRING_LIT)){
+            consume(IToken.Kind.STRING_LIT,"")
+        }
+        else if(isKind(IToken.Kind.INT_LIT)){
+            consume(IToken.Kind.INT_LIT, "int lit error")
+        }
+        else if(isKind(IToken.Kind.FLOAT_LIT)){
+            consume(IToken.Kind.FLOAT_LIT, "")
+        }
+        else if(isKind(IToken.Kind.IDENT)){
+            consume(IToken.Kind.IDENT, "")
+        }
+        else if(isKind(IToken.Kind.LPAREN)){
+            consume(IToken.Kind.LPAREN,"");
+            expr();
+            match(IToken.Kind.RPAREN);
+        }
+        else{
+            throw error();
+        }
+        return;
     }
+
+
+}
     String First(){
 
     }
