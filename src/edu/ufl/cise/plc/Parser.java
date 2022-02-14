@@ -37,7 +37,17 @@ public class Parser implements IParser {
 
     }
     void MultiplicativeExpr(){
-
+        UnaryExpr();
+        while (isKind(IToken.Kind.TIMES, IToken.Kind.DIV)){
+            if(isKind(IToken.Kind.TIMES)) {
+                consume(IToken.Kind.TIMES,"");    //what to put in message?
+            }
+            else{//else if or else
+                consume(IToken.Kind.DIV,"");
+            }
+            UnaryExpr();
+        }
+        return;
     }
     void UnaryExpr(){
 
@@ -108,7 +118,16 @@ public class Parser implements IParser {
             report(token.line, " at '" + token.lexeme + "'", message);
         }
     }
-
+    protected boolean isKind(IToken.Kind kind) {
+        return t.getKind() == kind;
+    }
+    protected boolean isKind(IToken.Kind... kinds) {
+        for (IToken.Kind k : kinds) {
+            if (k == t.getKind())
+                return true;
+        }
+        return false;
+    }
 
 
 
