@@ -193,7 +193,9 @@ public class Parser implements IParser {
         else if(){
 
         }
+        else{
 
+        }
 
 
 
@@ -202,15 +204,18 @@ public class Parser implements IParser {
     Expr UnaryExprPostfix(){
         IToken firstToken = t;
         Expr e = null;
+        PixelSelector p = null;
 
         e = PrimaryExpr();
 
 
         //TODO   figure out ? 0 or 1 code
+        if (isKind(IToken.Kind.LSQUARE)) {
+            p = PixelSelector();
+        }
+        e = new UnaryExprPostfix(firstToken, e, p );
 
-
-
-
+        return e;
     }
     Expr PrimaryExpr(){
         IToken firstToken = t;
