@@ -339,6 +339,19 @@ public class Lexer implements ILexer {
 						break;
 					}
 					switch(ch) {
+						case '\\' -> {
+							if(inputString.length() > position & state != States.END) {
+								char testCh = inputString.charAt(position + 1);  // get next character
+								if(testCh == '\"') {
+									colNum = colNum + 2;
+									position = position + 2;  //skip over \"
+								}
+								else {
+									position++;
+									break;
+								}
+							}
+						}
 						case '"' -> {
 							if(position - startPos < 0) { // case for "", an empty string literal
 								tokenArr.add(new Token(Kind.STRING_LIT, startPos, 2, "", lineNum, colNum));

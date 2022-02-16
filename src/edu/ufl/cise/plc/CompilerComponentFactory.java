@@ -16,4 +16,8 @@ public class CompilerComponentFactory {
 		return new Lexer(input);
 	}
 	
+	public static IParser getParser(String input) {
+		return new Parser(input);
+	}
+	
 }

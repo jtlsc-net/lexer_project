@@ -7,8 +7,8 @@ public class Token implements IToken {
 	private SourceLocation sourceLocation;
 	final int position;
 	final int length;
-	final String input;
-	final Kind kind;
+	private String input;
+	private Kind kind;
 
 
 	public Token(Kind kind, int position, int length, String input, int lineNum, int colNum) {
@@ -57,9 +57,56 @@ public class Token implements IToken {
 
 	@Override
 	public String getStringValue() {
+		int remove = 0;
 		if(kind == Kind.STRING_LIT) {
-			return input.substring(1, input.length() - 1);
-		}
+			String newString = input.substring(1, input.length() - 1);
+			char[] ch = newString.toCharArray();
+			for(int i = 0; i < ch.length; i++) {
+				if(ch[i] == '\\') {
+					switch(ch[i + 1]) {
+						case '\\' -> {
+							ch[i] = '\\';
+						}
+						case 'b' -> {
+							ch[i] = '\b';
+						}
+						case 't' -> {
+							ch[i] = '\t';
+						}
+						case 'n' -> {
+							ch[i] = '\n';
+						}
+						case 'f' -> {
+							ch[i] = '\f';
+						}
+						case 'r' -> {
+							ch[i] = '\r';
+						}
+						case '\"' -> {
+							ch[i] = '\"';
+						}
+						case '\'' -> {
+							ch[i] = '\'';
+						}
+						default -> {
+							this.kind = Kind.ERROR;
+							this.input = "Illegal string literal expression";
+							return input;
+						}
+					}
+					remove++;
+					for(int z = i + 1; z < ch.length - 1; z++) {
+						ch[z] = ch[z + 1];
+					}
+				}
+			}
+			char[] q = new char[ch.length - remove];
+			for(int n = 0; n < q.length; n++){
+				q[n] = ch[n];
+			}
+			return String.valueOf(q);
+		} 
+	   
 		return input;
 	}
 

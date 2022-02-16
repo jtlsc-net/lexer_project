@@ -459,7 +459,17 @@ public class LexerTests {
 				""";
 		show(input);
 		ILexer lexer = getLexer(input);
-		checkToken(lexer.next(), Kind.STRING_LIT, 0,0, "");
+		IToken t = lexer.next();
+		String val = t.getStringValue();
+		show("getStringValueChars=     " + getASCII(val));
+		String expectedStringValue = "";
+		show("expectedStringValueChars=" + getASCII(expectedStringValue));
+		assertEquals(expectedStringValue, val);
+		String text = t.getText();
+		show("getTextChars=     " +getASCII(text));
+		String expectedText = "\"\""; //almost the same as input, but white space is omitted
+		show("expectedTextChars="+getASCII(expectedText));
+		assertEquals(expectedText,text);
 		checkToken(lexer.next(), Kind.TIMES, 0,2);
 		checkEOF(lexer.next());
 	}
@@ -698,11 +708,11 @@ public class LexerTests {
 		show("input chars= " + getASCII(input));
 		ILexer lexer = getLexer(input);
 		IToken t = lexer.next();
-//		String val = t.getStringValue();
-//		show("getStringValueChars=     " + getASCII(val));
-//		String expectedStringValue = "\b \t \n \f \r ";
-//		show("expectedStringValueChars=" + getASCII(expectedStringValue));
-//		assertEquals(expectedStringValue, val);
+		String val = t.getStringValue();
+		show("getStringValueChars=     " + getASCII(val));
+		String expectedStringValue = "\b \t \n \f \r ";
+		show("expectedStringValueChars=" + getASCII(expectedStringValue));
+		assertEquals(expectedStringValue, val);
 		String text = t.getText();
 		show("getTextChars=     " +getASCII(text));
 		String expectedText = "\"\\b \\t \\n \\f \\r \"";
