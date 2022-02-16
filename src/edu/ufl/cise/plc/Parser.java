@@ -1,70 +1,103 @@
 package edu.ufl.cise.plc;
 
-import edu.ufl.cise.plc.ast.ASTNode;
-import edu.ufl.cise.plc.ast.Expr;
+import com.sun.source.tree.Tree;
+import edu.ufl.cise.plc.ast.*;
+import jdk.jshell.Snippet;
 
 import java.util.*;
-
+//TODO make parse function, make the error functions,
 public class Parser implements IParser {
-    private final List<Token> tokens;
+    private final ArrayList<Token> tokens;
     int curr = 0;
+    IToken t;
     //change if needed
-    Parser(List<Token> tokens) {
+    Parser(ArrayList<Token> tokens) {
         this.tokens = tokens;
     }
-
+    ASTNode newNode;
 
     ASTNode parse() throws PLCException{
-
+        Expr ast = expr();
 
 
     }
-    void expr(){
+    Expr expr(){
 
         if()
 
 
     }
-    void ConditionalExpr(){
 
+    //TODO expr not done
+    public Expr ConditionalExpr(){
+        IToken firstToken = t;
+        Expr e  = null;
+        match(IToken.Kind.KW_IF);
+        match(IToken.Kind.LPAREN);
+        expr()
+
+
+
+        return e;
     }
-    void LogicalOrExpr(){
-        LogicalAndExpr ();
+    //TODO
+    Expr LogicalOrExpr(){
+        IToken firstToken = t;
+        Expr left = null;
+        Expr right = null;
+
+        left =  LogicalAndExpr();
         while (isKind(IToken.Kind.OR)){
+            IToken op = t;
             consume(IToken.Kind.OR,"");    //what to put in message?
-
-            LogicalAndExpr ();
+            right = LogicalAndExpr();
+            left = new BinaryExpr(firstToken,left,op,right);
         }
-        return;
+        return left;
 
     }
 
-    void LogicalAndExpr(){
-        ComparisonExpr ();
+
+    Expr LogicalAndExpr(){
+        IToken firstToken = t;
+        Expr left = null;
+        Expr right = null;
+        left = ComparisonExpr();
         while (isKind(IToken.Kind.AND)){
+
+            IToken op = t;
+
             consume(IToken.Kind.AND,"");    //what to put in message?
-
-            ComparisonExpr ();
+            right = ComparisonExpr ();
+            left = new BinaryExpr(firstToken,left,op,right);
         }
-        return;
+        return left;
     }
-    void ComparisonExpr (){
+    Expr ComparisonExpr (){
 
     }
-    void AdditiveExpr (){
-        MultiplicativeExpr();
+    Expr AdditiveExpr (){
+
+        IToken firstToken = t;
+        Expr left = null;
+        Expr right = null;
+        left= MultiplicativeExpr();
         while (isKind(IToken.Kind.PLUS, IToken.Kind.MINUS)){
+            IToken op = t;
             if(isKind(IToken.Kind.PLUS)) {
                 consume(IToken.Kind.PLUS,"");    //what to put in message?
             }
             else{//else if or else
                 consume(IToken.Kind.MINUS,"");
             }
-            MultiplicativeExpr();
+            right= MultiplicativeExpr();
+            left = new BinaryExpr(firstToken,left,op,right);
         }
-        return;
+        return left;
     }
-    void MultiplicativeExpr(){
+
+    //TODO
+    Expr MultiplicativeExpr(){
         UnaryExpr();
         while (isKind(IToken.Kind.TIMES, IToken.Kind.DIV)){
             if(isKind(IToken.Kind.TIMES)) {
@@ -87,25 +120,34 @@ public class Parser implements IParser {
 
     }
     void PixelSelector(){
+
+        IToken firstToken = t;
+        Expr e = null;
+
         if(isKind(IToken.Kind.BOOLEAN_LIT)){
+            e = new BooleanLitExpr(firstToken);
             consume(IToken.Kind.BOOLEAN_LIT,"");
 
         }
         else if(isKind(IToken.Kind.STRING_LIT)){
+            e = new StringLitExpr(firstToken);
             consume(IToken.Kind.STRING_LIT,"")
         }
         else if(isKind(IToken.Kind.INT_LIT)){
+            e = new IntLitExpr(firstToken);
             consume(IToken.Kind.INT_LIT, "int lit error")
         }
         else if(isKind(IToken.Kind.FLOAT_LIT)){
+            e = new FloatLitExpr(firstToken);
             consume(IToken.Kind.FLOAT_LIT, "")
         }
         else if(isKind(IToken.Kind.IDENT)){
+            e = new IdentExpr(firstToken);
             consume(IToken.Kind.IDENT, "")
         }
         else if(isKind(IToken.Kind.LPAREN)){
             consume(IToken.Kind.LPAREN,"");
-            expr();
+            e= expr();
             match(IToken.Kind.RPAREN);
         }
         else{
@@ -116,15 +158,6 @@ public class Parser implements IParser {
 
 
 }
-    String First(){
-
-    }
-    String Forward(){
-
-    }
-    String Predict(){
-
-    }
 
     //basically copy pasted from the book, which i think is allowed, but check later if this type of stuff needs
 //changed
