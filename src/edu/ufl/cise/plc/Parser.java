@@ -207,6 +207,10 @@ public class Parser implements IParser {
 
 
         //TODO   figure out ? 0 or 1 code
+
+
+
+
     }
     Expr PrimaryExpr(){
         IToken firstToken = t;
@@ -244,24 +248,25 @@ public class Parser implements IParser {
         return e;
 
     }
-    Expr PixelSelector(){
+    PixelSelector PixelSelector(){
 
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
+        PixelSelector ast;
         if(isKind(IToken.Kind.LSQUARE)){
             consume(IToken.Kind.LSQUARE, "Expected left param");
             left = expr();
             match();
             right = expr();
             consume(IToken.Kind.RSQUARE, "Expected right param");
-            //TODO, this function returns an AST, not sure what to return
-            ASTNode ast = new PixelSelector(firstToken, left, right);
+            //TODO, check this
+            ast = new PixelSelector(firstToken, left, right);
         }
         else{
             throw error();
         }
-
+        return ast;
     }
 
 
@@ -290,7 +295,7 @@ public class Parser implements IParser {
     private boolean isAtEnd() {
         return peek().kind == IToken.Kind.EOF;
     }
-    //does this overlap with peek in the lexer class
+    //TODO does this overlap with peek in the lexer class
     private Token peek() {
         return tokens.get(curr);
     }
