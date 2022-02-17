@@ -1,6 +1,8 @@
 package edu.ufl.cise.plc;
 
 import com.sun.source.tree.Tree;
+
+import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.*;
 import jdk.jshell.Snippet;
 
@@ -8,21 +10,28 @@ import java.text.ParseException;
 import java.util.*;
 //TODO make parse function, make the error functions, check for errors for the functions that don't check for them yet
 public class Parser implements IParser {
-    private final ArrayList<Token> tokens;
+    private ArrayList<IToken> tokens = new ArrayList<IToken>();
+    private IToken t;
     int curr = 0;
-    IToken t;
+    private ASTNode newNode;
 
     //change if needed
-    Parser(ArrayList<Token> tokens) {
-        this.tokens = tokens;
+    public Parser(String input) throws PLCException {
+        ILexer lexer = new Lexer(input);
+        IToken tor = lexer.next();
+        while(tor.getKind() != Kind.EOF) {
+        	tokens.add(tor);
+        	tor = lexer.next();
+        }
+        tokens.add(tor);
+        t = tokens.get(curr);
     }
-    ASTNode newNode;
 
 
     //todo to fix this, needs to be public
-    ASTNode parse() throws PLCException{
+    public ASTNode parse() throws PLCException{
         Expr ast = expr();
-
+        System.out.println(ast);
 
         return ast;
 
@@ -30,7 +39,7 @@ public class Parser implements IParser {
 
     //TODO, improve code namely maybe have predict sets? Either way, just incorporate errors
     //TODO also if we have problem with >= == and | &, we can split the expr function according to discord
-    Expr expr(){
+    public Expr expr() throws PLCException{
         IToken firstToken = t;
         Expr e  = null;
         if(isKind(IToken.Kind.KW_IF)){
@@ -46,8 +55,8 @@ public class Parser implements IParser {
     }
 
     //TODO expr not done
-    public Expr ConditionalExpr(){
-        IToken firstToken = t;
+    public Expr ConditionalExpr() throws PLCException{
+        IToken firstToken = tokens.get(0);
         Expr e  = null;
         Expr e2 = null;
         Expr e3 = null;
@@ -62,12 +71,12 @@ public class Parser implements IParser {
             match(IToken.Kind.KW_FI);
             e = new ConditionalExpr(firstToken, e, e2, e3);
         }else{
-            throw error();
+            throw new SyntaxException("Error: invalid conditional expression.");
         }
         return e;
     }
     //TODO
-    Expr LogicalOrExpr(){
+    Expr LogicalOrExpr() throws PLCException{
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
@@ -84,7 +93,7 @@ public class Parser implements IParser {
     }
 
 
-    Expr LogicalAndExpr(){
+    Expr LogicalAndExpr() throws PLCException{
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
@@ -99,7 +108,7 @@ public class Parser implements IParser {
         }
         return left;
     }
-    Expr ComparisonExpr (){
+    Expr ComparisonExpr () throws PLCException{
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
@@ -133,7 +142,7 @@ public class Parser implements IParser {
 
 
     }
-    Expr AdditiveExpr (){
+    Expr AdditiveExpr () throws PLCException{
 
         IToken firstToken = t;
         Expr left = null;
@@ -154,11 +163,11 @@ public class Parser implements IParser {
     }
 
     //TODO
-    Expr MultiplicativeExpr(){
+    Expr MultiplicativeExpr() throws PLCException{
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
-        UnaryExpr();
+        left = UnaryExpr();
         while (isKind(IToken.Kind.TIMES, IToken.Kind.DIV)){
             IToken op = t;
             if(isKind(IToken.Kind.TIMES)) {
@@ -173,7 +182,7 @@ public class Parser implements IParser {
         }
         return left;
     }
-    Expr UnaryExpr(){
+    public Expr UnaryExpr() throws PLCException{
         IToken firstToken = t;
         Expr e = null;
         Expr e1= null;
@@ -205,7 +214,7 @@ public class Parser implements IParser {
 
 
     }
-    Expr UnaryExprPostfix() throws SyntaxException {
+    public Expr UnaryExprPostfix() throws PLCException {
         IToken firstToken = t;
         Expr e = null;
         PixelSelector p = null;
@@ -221,7 +230,7 @@ public class Parser implements IParser {
 
         return e;
     }
-    Expr PrimaryExpr(){
+    Expr PrimaryExpr() throws PLCException{
         IToken firstToken = t;
         Expr e = null;
 
@@ -232,19 +241,19 @@ public class Parser implements IParser {
         }
         else if(isKind(IToken.Kind.STRING_LIT)){
             e = new StringLitExpr(firstToken);
-            consume(IToken.Kind.STRING_LIT,"")
+            consume(IToken.Kind.STRING_LIT,"");
         }
         else if(isKind(IToken.Kind.INT_LIT)){
             e = new IntLitExpr(firstToken);
-            consume(IToken.Kind.INT_LIT, "int lit error")
+            consume(IToken.Kind.INT_LIT, "int lit error");
         }
         else if(isKind(IToken.Kind.FLOAT_LIT)){
             e = new FloatLitExpr(firstToken);
-            consume(IToken.Kind.FLOAT_LIT, "")
+            consume(IToken.Kind.FLOAT_LIT, "");
         }
         else if(isKind(IToken.Kind.IDENT)){
             e = new IdentExpr(firstToken);
-            consume(IToken.Kind.IDENT, "")
+            consume(IToken.Kind.IDENT, "");
         }
         else if(isKind(IToken.Kind.LPAREN)){
             consume(IToken.Kind.LPAREN,"");
@@ -252,12 +261,12 @@ public class Parser implements IParser {
             match(IToken.Kind.RPAREN);
         }
         else{
-            throw error();
+            throw new SyntaxException("Error in PrimaryExpr");
         }
         return e;
 
     }
-    PixelSelector PixelSelector() throws SyntaxException {
+    PixelSelector PixelSelector() throws PLCException {
 
         IToken firstToken = t;
         Expr x = null;
@@ -273,7 +282,7 @@ public class Parser implements IParser {
             ast = new PixelSelector(firstToken, x, y);
         }
         else{
-            throw error();
+            throw new SyntaxException("Error in PixelSelector.");
         }
         return ast;
     }
@@ -297,7 +306,7 @@ public class Parser implements IParser {
         if (isAtEnd()) return false;
         return peek().getKind() == kind;
     }
-    private Token advance() {
+    private IToken advance() {
         if (!isAtEnd()) curr++;
         return previous();
     }
@@ -305,18 +314,19 @@ public class Parser implements IParser {
         return peek().getKind() == IToken.Kind.EOF;
     }
     //TODO does this overlap with peek in the lexer class. Prob change this
-    private Token peek() {
+    private IToken peek() {
         return tokens.get(curr);
     }
-    private Token previous() {
+    private IToken previous() {
         return tokens.get(curr - 1);
     }
 
     // TODO check consume and match if which one we need to use
-    private Token consume(IToken.Kind kind, String message) throws SyntaxException {
+    private IToken consume(IToken.Kind kind, String message) throws SyntaxException {
         if (check(kind)) return advance();
 
-        throw error(peek(), message);
+//        throw error(peek(), message);
+        throw new SyntaxException("Unknown error");
     }
 //TODO change this
 
@@ -326,7 +336,7 @@ public class Parser implements IParser {
         if (token.getKind() == IToken.Kind.EOF) {
             throw new SyntaxException("end", token.getSourceLocation());
         } else {
-            throw new SyntaxException(message, token.getSourceLocation())
+            throw new SyntaxException(message, token.getSourceLocation());
         }
     }
     protected boolean isKind(IToken.Kind kind) {
