@@ -4,18 +4,22 @@ import com.sun.source.tree.Tree;
 import edu.ufl.cise.plc.ast.*;
 import jdk.jshell.Snippet;
 
+import java.text.ParseException;
 import java.util.*;
 //TODO make parse function, make the error functions, check for errors for the functions that don't check for them yet
 public class Parser implements IParser {
     private final ArrayList<Token> tokens;
     int curr = 0;
     IToken t;
+
     //change if needed
     Parser(ArrayList<Token> tokens) {
         this.tokens = tokens;
     }
     ASTNode newNode;
 
+
+    //todo to fix this, needs to be public
     ASTNode parse() throws PLCException{
         Expr ast = expr();
 
@@ -25,6 +29,7 @@ public class Parser implements IParser {
     }
 
     //TODO, improve code namely maybe have predict sets? Either way, just incorporate errors
+    //TODO also if we have problem with >= == and | &, we can split the expr function according to discord
     Expr expr(){
         IToken firstToken = t;
         Expr e  = null;
@@ -189,12 +194,11 @@ public class Parser implements IParser {
             }
             e = UnaryExpr();
             e1 = new UnaryExpr(firstToken, op,  e);
-        }
-        else if(){
-
+            return e1;
         }
         else{
-
+            e = UnaryExprPostfix();
+            return e;
         }
 
 
@@ -256,17 +260,17 @@ public class Parser implements IParser {
     PixelSelector PixelSelector(){
 
         IToken firstToken = t;
-        Expr left = null;
-        Expr right = null;
+        Expr x = null;
+        Expr y = null;
         PixelSelector ast;
         if(isKind(IToken.Kind.LSQUARE)){
             consume(IToken.Kind.LSQUARE, "Expected left param");
-            left = expr();
+            x = expr();
             match();
-            right = expr();
+            y = expr();
             consume(IToken.Kind.RSQUARE, "Expected right param");
             //TODO, check this
-            ast = new PixelSelector(firstToken, left, right);
+            ast = new PixelSelector(firstToken, x, y);
         }
         else{
             throw error();
@@ -291,16 +295,16 @@ public class Parser implements IParser {
     }
     private boolean check(IToken.Kind kind) {
         if (isAtEnd()) return false;
-        return peek().kind == kind;
+        return peek().getKind() == kind;
     }
     private Token advance() {
         if (!isAtEnd()) curr++;
         return previous();
     }
     private boolean isAtEnd() {
-        return peek().kind == IToken.Kind.EOF;
+        return peek().getKind() == IToken.Kind.EOF;
     }
-    //TODO does this overlap with peek in the lexer class
+    //TODO does this overlap with peek in the lexer class. Prob change this
     private Token peek() {
         return tokens.get(curr);
     }
@@ -314,14 +318,13 @@ public class Parser implements IParser {
 
         throw error(peek(), message);
     }
-    //TODO change this
-    private ParseError error(Token token, String message) {
-        Lox.error(token, message);
-        return new ParseError();
-    }
-    static void error(Token token, String message) {
-        if (token.kind == IToken.Kind.EOF) {
-            report(token.line, " at end", message);
+//TODO change this
+
+    static void error(Token token, String message) throws SyntaxException {
+
+        //TODO is there suppose to be EOF error? and when
+        if (token.getKind() == IToken.Kind.EOF) {
+            throw new SyntaxException("end", token.getSourceLocation());
         } else {
             report(token.line, " at '" + token.lexeme + "'", message);
         }
