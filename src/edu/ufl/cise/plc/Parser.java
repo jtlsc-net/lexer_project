@@ -42,14 +42,12 @@ public class Parser implements IParser {
     public Expr expr() throws PLCException{
         IToken firstToken = t;
         Expr e  = null;
-        while(t.getKind() != IToken.Kind.EOF) {
-	        if(isKind(IToken.Kind.KW_IF)){
-	            e = ConditionalExpr();
-	        }
-	        else{
-	            e = LogicalAndExpr();
-	
-	        }
+        if(isKind(IToken.Kind.KW_IF)){
+            e = ConditionalExpr();
+        }
+        else{
+            e = LogicalAndExpr();
+
         }
 
         return e;
@@ -184,6 +182,7 @@ public class Parser implements IParser {
         return left;
     }
     public Expr UnaryExpr() throws PLCException{
+    	System.out.println("UNARY");
         IToken firstToken = t;
         Expr e = null;
         Expr e1= null;
@@ -226,6 +225,9 @@ public class Parser implements IParser {
         //TODO   figure out ? 0 or 1 code
         if (isKind(IToken.Kind.LSQUARE)) {
             p = PixelSelector();
+        }
+        else {
+        	
         }
         //TODO re-add this.  (was overwriting any primary expressions)
         //e = new UnaryExprPostfix(firstToken, e, p );
