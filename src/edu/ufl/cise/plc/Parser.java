@@ -42,14 +42,15 @@ public class Parser implements IParser {
     public Expr expr() throws PLCException{
         IToken firstToken = t;
         Expr e  = null;
-        if(isKind(IToken.Kind.KW_IF)){
-            e = ConditionalExpr();
+        while(t.getKind() != IToken.Kind.EOF) {
+	        if(isKind(IToken.Kind.KW_IF)){
+	            e = ConditionalExpr();
+	        }
+	        else{
+	            e = LogicalAndExpr();
+	
+	        }
         }
-        else{
-            e = LogicalAndExpr();
-
-        }
-
 
         return e;
     }
@@ -308,7 +309,10 @@ public class Parser implements IParser {
         return peek().getKind() == kind;
     }
     private IToken advance() {
-        if (!isAtEnd()) curr++;
+        if (!isAtEnd()) {
+        	curr++;
+        	t = tokens.get(curr);
+        }
         return previous();
     }
     private boolean isAtEnd() {
