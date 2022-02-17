@@ -182,7 +182,6 @@ public class Parser implements IParser {
         return left;
     }
     public Expr UnaryExpr() throws PLCException{
-    	System.out.println("UNARY");
         IToken firstToken = t;
         Expr e = null;
         Expr e1= null;
@@ -190,7 +189,7 @@ public class Parser implements IParser {
         if(isKind(IToken.Kind.BANG, IToken.Kind.MINUS, IToken.Kind.COLOR_OP, IToken.Kind.IMAGE_OP)){
             IToken op = t;
             if(isKind(IToken.Kind.COLOR_OP)) {
-            	System.out.println("COLOR");
+//            	System.out.println("COLOR");
                 consume(IToken.Kind.COLOR_OP,"");    //what to put in message?
             }
             else if(isKind(IToken.Kind.IMAGE_OP)) {
@@ -220,15 +219,20 @@ public class Parser implements IParser {
         Expr e = null;
         PixelSelector p = null;
 
-        e = PrimaryExpr();
+        
 
-
-        //TODO   figure out ? 0 or 1 code
-        if (isKind(IToken.Kind.LSQUARE)) {
-            p = PixelSelector();
+        if(tokens.get(curr + 1).getKind() == IToken.Kind.LSQUARE) {
+        	e = PrimaryExpr();
+        	p = PixelSelector();
+        	e = new UnaryExprPostfix(firstToken, e, p);
         }
+        //TODO   figure out ? 0 or 1 code
+//        if (isKind(IToken.Kind.LSQUARE)) {
+//            p = PixelSelector();
+//            e = new UnaryExprPostfix(firstToken, e, p);
+//        }
         else {
-        	
+        	e = PrimaryExpr();
         }
         //TODO re-add this.  (was overwriting any primary expressions)
         //e = new UnaryExprPostfix(firstToken, e, p );
@@ -280,7 +284,7 @@ public class Parser implements IParser {
         if(isKind(IToken.Kind.LSQUARE)){
             consume(IToken.Kind.LSQUARE, "Expected left param");
             x = expr();
-            match();
+            match(IToken.Kind.COMMA);
             y = expr();
             consume(IToken.Kind.RSQUARE, "Expected right param");
             //TODO, check this
