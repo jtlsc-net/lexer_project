@@ -226,7 +226,8 @@ public class Parser implements IParser {
         if (isKind(IToken.Kind.LSQUARE)) {
             p = PixelSelector();
         }
-        e = new UnaryExprPostfix(firstToken, e, p );
+        //TODO re-add this.  (was overwriting any primary expressions)
+        //e = new UnaryExprPostfix(firstToken, e, p );
 
         return e;
     }
@@ -314,6 +315,7 @@ public class Parser implements IParser {
         return peek().getKind() == IToken.Kind.EOF;
     }
     //TODO does this overlap with peek in the lexer class. Prob change this
+    // I think no need because this is private and the lexer one will have to be called with lexer.peek()
     private IToken peek() {
         return tokens.get(curr);
     }
