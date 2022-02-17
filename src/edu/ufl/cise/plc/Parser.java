@@ -34,7 +34,7 @@ public class Parser implements IParser {
         IToken firstToken = t;
         Expr e  = null;
         if(isKind(IToken.Kind.KW_IF)){
-            e = ConditionalExpr()
+            e = ConditionalExpr();
         }
         else{
             e = LogicalAndExpr();
@@ -205,7 +205,7 @@ public class Parser implements IParser {
 
 
     }
-    Expr UnaryExprPostfix(){
+    Expr UnaryExprPostfix() throws SyntaxException {
         IToken firstToken = t;
         Expr e = null;
         PixelSelector p = null;
@@ -257,7 +257,7 @@ public class Parser implements IParser {
         return e;
 
     }
-    PixelSelector PixelSelector(){
+    PixelSelector PixelSelector() throws SyntaxException {
 
         IToken firstToken = t;
         Expr x = null;
@@ -313,7 +313,7 @@ public class Parser implements IParser {
     }
 
     // TODO check consume and match if which one we need to use
-    private Token consume(IToken.Kind kind, String message) {
+    private Token consume(IToken.Kind kind, String message) throws SyntaxException {
         if (check(kind)) return advance();
 
         throw error(peek(), message);
@@ -326,7 +326,7 @@ public class Parser implements IParser {
         if (token.getKind() == IToken.Kind.EOF) {
             throw new SyntaxException("end", token.getSourceLocation());
         } else {
-            report(token.line, " at '" + token.lexeme + "'", message);
+            throw new SyntaxException(message, token.getSourceLocation())
         }
     }
     protected boolean isKind(IToken.Kind kind) {
