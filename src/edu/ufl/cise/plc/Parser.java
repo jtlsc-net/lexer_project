@@ -187,15 +187,16 @@ public class Parser implements IParser {
         Expr e = null;
         Expr e1= null;
 
-        if(isKind(IToken.Kind.BANG, IToken.Kind.MINUS, IToken.Kind.COLOR_CONST, IToken.Kind.IMAGE_OP)){
+        if(isKind(IToken.Kind.BANG, IToken.Kind.MINUS, IToken.Kind.COLOR_OP, IToken.Kind.IMAGE_OP)){
             IToken op = t;
-            if(isKind(IToken.Kind.COLOR_CONST)) {
-                consume(IToken.Kind.COLOR_CONST,"");    //what to put in message?
+            if(isKind(IToken.Kind.COLOR_OP)) {
+            	System.out.println("COLOR");
+                consume(IToken.Kind.COLOR_OP,"");    //what to put in message?
             }
-            if(isKind(IToken.Kind.IMAGE_OP)) {
+            else if(isKind(IToken.Kind.IMAGE_OP)) {
                 consume(IToken.Kind.IMAGE_OP,"");    //what to put in message?
             }
-            if(isKind(IToken.Kind.BANG)) {
+            else if(isKind(IToken.Kind.BANG)) {
                 consume(IToken.Kind.BANG,"");    //what to put in message?
             }
             else{//else if or else
