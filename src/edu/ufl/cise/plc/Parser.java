@@ -13,7 +13,6 @@ public class Parser implements IParser {
     private ArrayList<IToken> tokens = new ArrayList<IToken>();
     private IToken t;
     int curr = 0;
-    private ASTNode newNode;
 
     //change if needed
     public Parser(String input) throws PLCException {
@@ -31,7 +30,6 @@ public class Parser implements IParser {
     //todo to fix this, needs to be public
     public ASTNode parse() throws PLCException{
         Expr ast = expr();
-        System.out.println(ast);
 
         return ast;
 
@@ -40,7 +38,6 @@ public class Parser implements IParser {
     //TODO, improve code namely maybe have predict sets? Either way, just incorporate errors
     //TODO also if we have problem with >= == and | &, we can split the expr function according to discord
     public Expr expr() throws PLCException{
-        IToken firstToken = t;
         Expr e  = null;
         if(isKind(IToken.Kind.KW_IF)){
             e = ConditionalExpr();
@@ -220,11 +217,15 @@ public class Parser implements IParser {
         PixelSelector p = null;
 
         
-
-        if(tokens.get(curr + 1).getKind() == IToken.Kind.LSQUARE) {
-        	e = PrimaryExpr();
-        	p = PixelSelector();
-        	e = new UnaryExprPostfix(firstToken, e, p);
+        if(curr + 1 < tokens.size()) {
+	        if(tokens.get(curr + 1).getKind() == IToken.Kind.LSQUARE) {
+	        	e = PrimaryExpr();
+	        	p = PixelSelector();
+	        	e = new UnaryExprPostfix(firstToken, e, p);
+	        }
+	        else {
+	        	e = PrimaryExpr();
+	        }
         }
         //TODO   figure out ? 0 or 1 code
 //        if (isKind(IToken.Kind.LSQUARE)) {
@@ -265,7 +266,7 @@ public class Parser implements IParser {
             consume(IToken.Kind.IDENT, "");
         }
         else if(isKind(IToken.Kind.LPAREN)){
-            consume(IToken.Kind.LPAREN,"");
+            match(IToken.Kind.LPAREN);
             e= expr();
             match(IToken.Kind.RPAREN);
         }
@@ -301,24 +302,27 @@ public class Parser implements IParser {
 
     //basically copy pasted from the book, which i think is allowed, but check later if this type of stuff needs
 //changed
-    private boolean match(IToken.Kind... kind) {
+    private boolean match(IToken.Kind... kind) throws SyntaxException{
         for (IToken.Kind k : kind) {
             if (check(k)) {
                 advance();
                 return true;
             }
         }
-
-        return false;
+        throw new SyntaxException("Match not found for " + peek().getKind());
+//        return false;
     }
     private boolean check(IToken.Kind kind) {
         if (isAtEnd()) return false;
         return peek().getKind() == kind;
     }
-    private IToken advance() {
+    private IToken advance() throws SyntaxException {
         if (!isAtEnd()) {
         	curr++;
         	t = tokens.get(curr);
+        }
+        else {
+        	throw new SyntaxException("EOF");
         }
         return previous();
     }
