@@ -6,6 +6,7 @@ import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.*;
 import jdk.jshell.Snippet;
 
+import javax.naming.Name;
 import java.text.ParseException;
 import java.util.*;
 //TODO make parse function, make the error functions, check for errors for the functions that don't check for them yet
@@ -19,8 +20,8 @@ public class Parser implements IParser {
         ILexer lexer = new Lexer(input);
         IToken tor = lexer.next();
         while(tor.getKind() != Kind.EOF) {
-        	tokens.add(tor);
-        	tor = lexer.next();
+            tokens.add(tor);
+            tor = lexer.next();
         }
         tokens.add(tor);
         t = tokens.get(curr);
@@ -35,15 +36,47 @@ public class Parser implements IParser {
 
     }
 
-    //TODO, improve code namely maybe have predict sets? Either way, just incorporate errors
-    //TODO also if we have problem with >= == and | &, we can split the expr function according to discord
+
+    public Expr Program() throws PLCException{
+        Expr e = null;
+        Expr e2 = null;
+        IToken firstToken = t;
+
+        if(isKind(IToken.Kind.TYPE,Kind.KW_VOID)) {
+            if (isKind(IToken.Kind.TYPE)) {
+                match(Kind.TYPE);
+            } else if (isKind(Kind.KW_VOID)) {
+                match(Kind.KW_VOID);
+            } else {
+                throw new SyntaxException("Error: invalid conditional expression.");
+            }
+
+            match(Kind.IDENT);
+
+            match(Kind.LPAREN);
+            e= NameDef();
+
+
+            if(isKind(Kind.COMMA)) {
+                match(Kind.COMMA);
+                e2 = NameDef();
+            }
+            //Declaration();
+
+
+        }
+
+        return e;
+    }
     public Expr expr() throws PLCException{
         Expr e  = null;
         if(isKind(IToken.Kind.KW_IF)){
             e = ConditionalExpr();
         }
         else{
-            e = LogicalAndExpr();
+
+            //TODO wierd cause this was logicalandexp before, so i changed it
+            e = LogicalOrExpr();
 
         }
 
@@ -216,16 +249,16 @@ public class Parser implements IParser {
         Expr e = null;
         PixelSelector p = null;
 
-        
+
         if(curr + 1 < tokens.size()) {
-	        if(tokens.get(curr + 1).getKind() == IToken.Kind.LSQUARE) {
-	        	e = PrimaryExpr();
-	        	p = PixelSelector();
-	        	e = new UnaryExprPostfix(firstToken, e, p);
-	        }
-	        else {
-	        	e = PrimaryExpr();
-	        }
+            if(tokens.get(curr + 1).getKind() == IToken.Kind.LSQUARE) {
+                e = PrimaryExpr();
+                p = PixelSelector();
+                e = new UnaryExprPostfix(firstToken, e, p);
+            }
+            else {
+                e = PrimaryExpr();
+            }
         }
         //TODO   figure out ? 0 or 1 code
 //        if (isKind(IToken.Kind.LSQUARE)) {
@@ -233,7 +266,7 @@ public class Parser implements IParser {
 //            e = new UnaryExprPostfix(firstToken, e, p);
 //        }
         else {
-        	e = PrimaryExpr();
+            e = PrimaryExpr();
         }
         //TODO re-add this.  (was overwriting any primary expressions)
         //e = new UnaryExprPostfix(firstToken, e, p );
@@ -318,11 +351,11 @@ public class Parser implements IParser {
     }
     private IToken advance() throws SyntaxException {
         if (!isAtEnd()) {
-        	curr++;
-        	t = tokens.get(curr);
+            curr++;
+            t = tokens.get(curr);
         }
         else {
-        	throw new SyntaxException("EOF");
+            throw new SyntaxException("EOF");
         }
         return previous();
     }

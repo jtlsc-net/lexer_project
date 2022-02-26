@@ -105,8 +105,8 @@ public class Token implements IToken {
 				q[n] = ch[n];
 			}
 			return String.valueOf(q);
-		} 
-	   
+		}
+
 		return input;
 	}
 
