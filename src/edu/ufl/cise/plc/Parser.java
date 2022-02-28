@@ -9,7 +9,6 @@ import jdk.jshell.Snippet;
 import javax.naming.Name;
 import java.text.ParseException;
 import java.util.*;
-//TODO make parse function, make the error functions, check for errors for the functions that don't check for them yet
 public class Parser implements IParser {
     private ArrayList<IToken> tokens = new ArrayList<IToken>();
     private IToken t;
@@ -27,8 +26,6 @@ public class Parser implements IParser {
         t = tokens.get(curr);
     }
 
-
-    //todo to fix this, needs to be public
     public ASTNode parse() throws PLCException{
         Expr ast = expr();
 
@@ -40,13 +37,22 @@ public class Parser implements IParser {
     public Expr Program() throws PLCException{
         Expr e = null;
         Expr e2 = null;
+        Expr e3= null;
+
+        //TOTO change type to something usable
+        Types.Type type = null;
         IToken firstToken = t;
 
         if(isKind(IToken.Kind.TYPE,Kind.KW_VOID)) {
             if (isKind(IToken.Kind.TYPE)) {
                 match(Kind.TYPE);
+
+                //TODO I dont know what variable i should do this
+                type = t.getKind();
             } else if (isKind(Kind.KW_VOID)) {
                 match(Kind.KW_VOID);
+                //TODO Change?
+                type = void;
             } else {
                 throw new SyntaxException("Error: invalid conditional expression.");
             }
@@ -61,6 +67,21 @@ public class Parser implements IParser {
                 match(Kind.COMMA);
                 e2 = NameDef();
             }
+
+            if(isKind(Kind.EQUALS, Kind.LARROW)){
+                e3 = Declaration();
+                match(Kind.SEMI);
+            }
+            else if(isKind(Kind.IDENT, Kind.RETURN, Kind.KW_WRITE)){
+                e3 = Statement();
+                match(Kind.SEMI);
+            }
+            else{
+                throw new SyntaxException("Error: invalid conditional expression.");
+
+            }
+
+
             //Declaration();
 
 
@@ -68,6 +89,10 @@ public class Parser implements IParser {
 
         return e;
     }
+    public Expr NameDef() throws PLCException{
+
+    }
+    public Expr
     public Expr expr() throws PLCException{
         Expr e  = null;
         if(isKind(IToken.Kind.KW_IF)){
@@ -329,7 +354,32 @@ public class Parser implements IParser {
         }
         return ast;
     }
+    Dimension Dimension() throws PLCException {
 
+        IToken firstToken = t;
+        Expr x = null;
+        Expr y = null;
+        Dimension ast;
+        if(isKind(IToken.Kind.LSQUARE)){
+            consume(IToken.Kind.LSQUARE, "Expected left param");
+            x = expr();
+            match(IToken.Kind.COMMA);
+            y = expr();
+            consume(IToken.Kind.RSQUARE, "Expected right param");
+            //TODO, check this
+            ast = new Dimension(firstToken, x, y);
+        }
+        else{
+            throw new SyntaxException("Error in PixelSelector.");
+        }
+        return ast;
+    }
+
+    Expr Statement() throws PLCException{
+
+
+
+    }
 
 
 
