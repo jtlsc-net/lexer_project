@@ -70,7 +70,7 @@ public class Parser implements IParser {
                 e2 = NameDef();
             }
 
-            if(isKind(Kind.EQUALS, Kind.LARROW)){
+            if(isKind(Kind.TYPE)){
                 node = Declaration();
                 match(Kind.SEMI);
             }
@@ -79,7 +79,7 @@ public class Parser implements IParser {
                 match(Kind.SEMI);
             }
             else{
-                throw new SyntaxException("Error: invalid conditional expression.");
+                throw new SyntaxException("Error: invalid Program expression.");
 
             }
 
@@ -92,9 +92,31 @@ public class Parser implements IParser {
         return e;
     }
     public Declaration NameDef() throws PLCException{
-        //DEF
+        IToken firstToken =t;
 
 
+        Dimension d= null;
+        Declaration dec = null;
+
+        if(isKind(Kind.TYPE)){
+            consume(Kind.TYPE, "Expected Type");
+            if(isKind(Kind.IDENT)){
+                consume(Kind.IDENT, "Expected IDENT");
+
+                //TODO FINISH THIS SENTENCE
+                dec = new NameDef(firstToken, firstToken.getText(), firstToken. );
+            }
+            else if(isKind(Kind.LSQUARE)){
+                d = Dimension();
+                match(Kind.IDENT);
+
+                //TODO FINISH THIS
+                dec = new NameDefWithDim(firstToken, );
+
+            }
+        }
+
+        return dec;
 
     }
 
@@ -154,7 +176,7 @@ public class Parser implements IParser {
         }
         return e;
     }
-    //TODO
+
     Expr LogicalOrExpr() throws PLCException{
         IToken firstToken = t;
         Expr left = null;
@@ -241,7 +263,7 @@ public class Parser implements IParser {
         return left;
     }
 
-    //TODO
+
     Expr MultiplicativeExpr() throws PLCException{
         IToken firstToken = t;
         Expr left = null;
@@ -310,7 +332,7 @@ public class Parser implements IParser {
                 e = PrimaryExpr();
             }
         }
-        //TODO   figure out ? 0 or 1 code
+
 //        if (isKind(IToken.Kind.LSQUARE)) {
 //            p = PixelSelector();
 //            e = new UnaryExprPostfix(firstToken, e, p);
@@ -318,7 +340,7 @@ public class Parser implements IParser {
         else {
             e = PrimaryExpr();
         }
-        //TODO re-add this.  (was overwriting any primary expressions)
+
         //e = new UnaryExprPostfix(firstToken, e, p );
 
         return e;
