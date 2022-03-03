@@ -7,8 +7,10 @@ import edu.ufl.cise.plc.ast.*;
 import edu.ufl.cise.plc.ast.Types.Type;
 import jdk.jshell.Snippet;
 
+
 import javax.naming.Name;
 import javax.xml.stream.events.Namespace;
+import java.lang.reflect.Array;
 import java.text.ParseException;
 import java.util.*;
 
@@ -97,7 +99,6 @@ public class Parser implements IParser {
     public NameDef NameDef() throws PLCException{
         IToken firstToken =t;
 
-
         Dimension d= null;
         NameDef dec = null;
 
@@ -125,12 +126,13 @@ public class Parser implements IParser {
 
     public ASTNode Declaration() throws PLCException{
         IToken firstToken = t;
+        IToken op = null;
         NameDef n = null;
         Expr e1= null;
         ASTNode node = null;
         n = NameDef();
         if(isKind(Kind.EQUALS, Kind.LARROW)){
-        	IToken op = t;
+            op = t;
             if(isKind(Kind.EQUALS)){
                 consume(Kind.EQUALS, "Expected Equals");
             }
@@ -140,7 +142,7 @@ public class Parser implements IParser {
             e1 = expr();
         }
         //TODO fix
-        node = new VarDeclaration(firstToken, n, t, e1);
+        node = new VarDeclaration(firstToken, n,op,e1);
 
         return node;
     }
