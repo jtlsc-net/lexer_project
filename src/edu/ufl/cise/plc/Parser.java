@@ -4,12 +4,14 @@ import com.sun.source.tree.Tree;
 
 import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.*;
+import edu.ufl.cise.plc.ast.Types.Type;
 import jdk.jshell.Snippet;
 
 import javax.naming.Name;
 import javax.xml.stream.events.Namespace;
 import java.text.ParseException;
 import java.util.*;
+
 public class Parser implements IParser {
     private ArrayList<IToken> tokens = new ArrayList<IToken>();
     private IToken t;
@@ -28,16 +30,17 @@ public class Parser implements IParser {
     }
 
     public ASTNode parse() throws PLCException{
-        Expr ast = expr();
+        //Expr ast = expr();
+    	Declaration ast = Program();
 
         return ast;
 
     }
 
 
-    public Expr Program() throws PLCException{
-        Expr e = null;
-        Expr e2 = null;
+    public Declaration Program() throws PLCException{
+        Declaration e = null;
+        Declaration e2 = null;
         Statement state= null;
         ASTNode node = null;
 
@@ -50,11 +53,11 @@ public class Parser implements IParser {
                 match(Kind.TYPE);
 
                 //TODO I dont know what variable i should do this
-                type = t.getKind();
+                type = Type.toType(t.getText());
             } else if (isKind(Kind.KW_VOID)) {
                 match(Kind.KW_VOID);
                 //TODO Change?
-                type = void;
+                type = Type.toType("void");
             } else {
                 throw new SyntaxException("Error: invalid conditional expression.");
             }
@@ -91,12 +94,12 @@ public class Parser implements IParser {
 
         return e;
     }
-    public Declaration NameDef() throws PLCException{
+    public NameDef NameDef() throws PLCException{
         IToken firstToken =t;
 
 
         Dimension d= null;
-        Declaration dec = null;
+        NameDef dec = null;
 
         if(isKind(Kind.TYPE)){
             consume(Kind.TYPE, "Expected Type");
@@ -104,14 +107,14 @@ public class Parser implements IParser {
                 consume(Kind.IDENT, "Expected IDENT");
 
                 //TODO FINISH THIS SENTENCE
-                dec = new NameDef(firstToken, firstToken.getText(), firstToken. );
+                dec = new NameDef(firstToken, firstToken.getText(), firstToken.getText());
             }
             else if(isKind(Kind.LSQUARE)){
                 d = Dimension();
                 match(Kind.IDENT);
 
                 //TODO FINISH THIS
-                dec = new NameDefWithDim(firstToken, );
+                dec = new NameDefWithDim(firstToken, firstToken.getText(), firstToken.getText(), d);
 
             }
         }
@@ -122,11 +125,12 @@ public class Parser implements IParser {
 
     public ASTNode Declaration() throws PLCException{
         IToken firstToken = t;
-        Declaration n = null;
+        NameDef n = null;
         Expr e1= null;
         ASTNode node = null;
         n = NameDef();
         if(isKind(Kind.EQUALS, Kind.LARROW)){
+        	IToken op = t;
             if(isKind(Kind.EQUALS)){
                 consume(Kind.EQUALS, "Expected Equals");
             }
@@ -136,7 +140,7 @@ public class Parser implements IParser {
             e1 = expr();
         }
         //TODO fix
-        node = new VarDeclaration(firstToken, n,e1);
+        node = new VarDeclaration(firstToken, n, t, e1);
 
         return node;
     }
