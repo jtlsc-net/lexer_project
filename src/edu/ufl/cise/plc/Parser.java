@@ -52,13 +52,10 @@ public class Parser implements IParser {
 
         if(isKind(IToken.Kind.TYPE,Kind.KW_VOID)) {
             if (isKind(IToken.Kind.TYPE)) {
-                //match(Kind.TYPE);
-                //TODO I dont know what variable i should do this
                 type = Type.toType(t.getText());
                 match(Kind.TYPE);
             } else if (isKind(Kind.KW_VOID)) {
                 match(Kind.KW_VOID);
-                //TODO Change?
                 type = Type.toType("void");
             } else {
                 throw new SyntaxException("Error: invalid conditional expression.");
@@ -120,12 +117,16 @@ public class Parser implements IParser {
             }
             else if(isKind(Kind.LSQUARE)){
                 d = Dimension();
-                match(Kind.IDENT);
-
+                if(isKind(Kind.IDENT)) {
+                    dec = new NameDefWithDim(firstToken, type, t.getText(), d);
+                	match(Kind.IDENT);
+                }
                 //TODO FINISH THIS
-                dec = new NameDefWithDim(firstToken, firstToken.getText(), firstToken.getText(), d);
 
             }
+        }
+        else {
+        	throw new SyntaxException("Error: invalid NameDef: " + t.getText() + t.getKind());
         }
 
         return dec;
@@ -148,9 +149,14 @@ public class Parser implements IParser {
                 consume(Kind.LARROW, "Expected LARROW");
             }
             e1 = expr();
+            node = new VarDeclaration(firstToken, n,op,e1);
         }
-        //TODO fix
-        node = new VarDeclaration(firstToken, n,op,e1);
+        else if(isKind(Kind.SEMI)){
+            node = new VarDeclaration(firstToken, n,op,e1);
+        }
+        else {
+        	throw new SyntaxException("Error: invalid declaration: " + t.getText() + t.getKind());
+        }
 
         return node;
     }
@@ -305,7 +311,6 @@ public class Parser implements IParser {
         if(isKind(IToken.Kind.BANG, IToken.Kind.MINUS, IToken.Kind.COLOR_OP, IToken.Kind.IMAGE_OP)){
             IToken op = t;
             if(isKind(IToken.Kind.COLOR_OP)) {
-//            	System.out.println("COLOR");
                 consume(IToken.Kind.COLOR_OP,"");    //what to put in message?
             }
             else if(isKind(IToken.Kind.IMAGE_OP)) {
@@ -415,7 +420,7 @@ public class Parser implements IParser {
         }
 
         else{
-            throw new SyntaxException("Error in PrimaryExpr");
+            throw new SyntaxException("Error in PrimaryExpr, current token: " + t.getText() + " " + t.getKind());
         }
         return e;
 
@@ -467,8 +472,10 @@ public class Parser implements IParser {
         Expr e = null;
         Expr e2 = null;
         Statement state = null;
+        String name = null;
 
         if(isKind(Kind.IDENT)){
+        	name = t.getText();
             consume(Kind.IDENT, "Expected Ident");
             if(isKind(Kind.LSQUARE)){
                 p= PixelSelector();
@@ -478,14 +485,12 @@ public class Parser implements IParser {
             if(isKind(Kind.ASSIGN)){
                 consume(Kind.ASSIGN, "Expected Assign");
                 e = expr();
-                //TODO CHECK IF ITS T.GETTEXT() or FIRSTTOKEN.GETTEXT
-                state = new AssignmentStatement(firstToken, t.getText(), p ,e);
+                state = new AssignmentStatement(firstToken, name, p ,e);
             }
             else if(isKind(Kind.LARROW)){
                 consume(Kind.LARROW, "Expected LARROW");
                 e = expr();
-                //TODO CHECK IF ITS T.GETTEXT() or FIRSTTOKEN.GETTEXT
-                state = new ReadStatement(firstToken, t.getText(), p ,e);
+                state = new ReadStatement(firstToken, name, p ,e);
 
             }
 
@@ -498,11 +503,13 @@ public class Parser implements IParser {
             e = expr();
             match(Kind.RARROW);
             e2 = expr();
-            state = new WriteStatement(firstToken, expr(),expr());
+            // Source e, dest e2
+            state = new WriteStatement(firstToken, e, e2);
 
 
         }
         else if(isKind(Kind.RETURN)) {
+        	match(Kind.RETURN);
             e = expr();
             state = new ReturnStatement(firstToken, e);
 
