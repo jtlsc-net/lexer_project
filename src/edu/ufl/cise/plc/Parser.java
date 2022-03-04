@@ -283,13 +283,16 @@ public class Parser implements IParser {
         Expr left = null;
         Expr right = null;
         left = UnaryExpr();
-        while (isKind(IToken.Kind.TIMES, IToken.Kind.DIV)){
+        while (isKind(IToken.Kind.TIMES, IToken.Kind.DIV, IToken.Kind.MOD)){
             IToken op = t;
             if(isKind(IToken.Kind.TIMES)) {
                 consume(IToken.Kind.TIMES,"");    //what to put in message?
             }
-            else{//else if or else
+            else if (isKind(IToken.Kind.DIV)){//else if or else
                 consume(IToken.Kind.DIV,"");
+            }
+            else if(isKind(IToken.Kind.MOD)) {
+            	consume(IToken.Kind.MOD, "");
             }
             right = UnaryExpr();
             left = new BinaryExpr(firstToken,left,op,right);
