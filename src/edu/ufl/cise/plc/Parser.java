@@ -33,18 +33,18 @@ public class Parser implements IParser {
 
     public ASTNode parse() throws PLCException{
         //Expr ast = expr();
-    	Declaration ast = Program();
+    	ASTNode ast = Program();
 
         return ast;
 
     }
 
 
-    public Declaration Program() throws PLCException{
-        Declaration e = null;
-        Declaration e2 = null;
-        Statement state= null;
-        ASTNode node = null;
+    public Program Program() throws PLCException{
+    	String name = null;
+        Program prog = null;
+        List<NameDef> parameters = new ArrayList<NameDef>();
+        List<ASTNode> defsAndStates = new ArrayList<ASTNode>();
 
         //TOTO change type to something usable
         Types.Type type = null;
@@ -52,10 +52,10 @@ public class Parser implements IParser {
 
         if(isKind(IToken.Kind.TYPE,Kind.KW_VOID)) {
             if (isKind(IToken.Kind.TYPE)) {
-                match(Kind.TYPE);
-
+                //match(Kind.TYPE);
                 //TODO I dont know what variable i should do this
                 type = Type.toType(t.getText());
+                match(Kind.TYPE);
             } else if (isKind(Kind.KW_VOID)) {
                 match(Kind.KW_VOID);
                 //TODO Change?
@@ -64,51 +64,59 @@ public class Parser implements IParser {
                 throw new SyntaxException("Error: invalid conditional expression.");
             }
 
-            match(Kind.IDENT);
+            if(isKind(Kind.IDENT)) {
+            	name = t.getText();
+            	consume(Kind.IDENT, "");
+            }
 
             match(Kind.LPAREN);
-            e= NameDef();
-
-
-            if(isKind(Kind.COMMA)) {
-                match(Kind.COMMA);
-                e2 = NameDef();
+            if(isKind(Kind.TYPE)) {
+	            parameters.add(NameDef());
+	
+	            while(isKind(Kind.COMMA)){
+	                match(Kind.COMMA);
+	                parameters.add(NameDef());
+	            }
             }
-
-            if(isKind(Kind.TYPE)){
-                node = Declaration();
-                match(Kind.SEMI);
+            match(Kind.RPAREN);
+            while(isKind(Kind.TYPE, Kind.IDENT, Kind.RETURN, Kind.KW_WRITE)) {
+	            if(isKind(Kind.TYPE)){
+	                defsAndStates.add(Declaration());
+	                match(Kind.SEMI);
+	            }
+	            else if(isKind(Kind.IDENT, Kind.RETURN, Kind.KW_WRITE)){
+	                defsAndStates.add(Statement());
+	                match(Kind.SEMI);
+	            }
             }
-            else if(isKind(Kind.IDENT, Kind.RETURN, Kind.KW_WRITE)){
-                state = Statement();
-                match(Kind.SEMI);
-            }
-            else{
-                throw new SyntaxException("Error: invalid Program expression.");
-
-            }
+//            else{
+//                throw new SyntaxException("Error: invalid Program expression.");
+//
+//            }
+            
 
 
             //Declaration();
-
+           
 
         }
-
-        return e;
+        prog = new Program(firstToken, type, name, parameters, defsAndStates);
+        return prog;
     }
     public NameDef NameDef() throws PLCException{
         IToken firstToken =t;
+        String type = null;
 
         Dimension d= null;
         NameDef dec = null;
 
         if(isKind(Kind.TYPE)){
+        	type = t.getText();
             consume(Kind.TYPE, "Expected Type");
             if(isKind(Kind.IDENT)){
+            	
+                dec = new NameDef(firstToken, type, t.getText());
                 consume(Kind.IDENT, "Expected IDENT");
-
-                //TODO FINISH THIS SENTENCE
-                dec = new NameDef(firstToken, firstToken.getText(), firstToken.getText());
             }
             else if(isKind(Kind.LSQUARE)){
                 d = Dimension();
@@ -124,17 +132,17 @@ public class Parser implements IParser {
 
     }
 
-    public ASTNode Declaration() throws PLCException{
+    public Declaration Declaration() throws PLCException{
         IToken firstToken = t;
         IToken op = null;
         NameDef n = null;
         Expr e1= null;
-        ASTNode node = null;
+        Declaration node = null;
         n = NameDef();
-        if(isKind(Kind.EQUALS, Kind.LARROW)){
+        if(isKind(Kind.ASSIGN, Kind.LARROW)){
             op = t;
-            if(isKind(Kind.EQUALS)){
-                consume(Kind.EQUALS, "Expected Equals");
+            if(isKind(Kind.ASSIGN)){
+                consume(Kind.ASSIGN, "Expected Equals");
             }
             else{
                 consume(Kind.LARROW, "Expected LARROW");
