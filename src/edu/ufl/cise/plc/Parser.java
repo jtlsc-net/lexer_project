@@ -163,7 +163,6 @@ public class Parser implements IParser {
             e = ConditionalExpr();
         }
         else{
-
             e = LogicalOrExpr();
 
         }
@@ -235,20 +234,19 @@ public class Parser implements IParser {
             if(isKind(IToken.Kind.GE)) {
                 consume(IToken.Kind.GE,"");    //what to put in message?
             }
-            if(isKind(IToken.Kind.EQUALS)) {
+            else if(isKind(IToken.Kind.EQUALS)) {
                 consume(IToken.Kind.EQUALS,"");    //what to put in message?
             }
-            if(isKind(IToken.Kind.NOT_EQUALS)) {
+            else if(isKind(IToken.Kind.NOT_EQUALS)) {
                 consume(IToken.Kind.NOT_EQUALS,"");    //what to put in message?
             }
-            if(isKind(IToken.Kind.LT)) {
+            else if(isKind(IToken.Kind.LT)) {
                 consume(IToken.Kind.LT,"");    //what to put in message?
             }
-            if(isKind(IToken.Kind.GT)) {
+            else if(isKind(IToken.Kind.GT)) {
                 consume(IToken.Kind.GT,"");    //what to put in message?
             }
-
-            else{//else if or else
+            else if(isKind(IToken.Kind.LE)){
                 consume(IToken.Kind.LE,"");
             }
             right= AdditiveExpr ();
@@ -531,7 +529,9 @@ public class Parser implements IParser {
 //        return false;
     }
     private boolean check(IToken.Kind kind) {
-        if (isAtEnd()) return false;
+        if (isAtEnd()) {
+        	return false;
+        }
         return peek().getKind() == kind;
     }
     private IToken advance() throws SyntaxException {
