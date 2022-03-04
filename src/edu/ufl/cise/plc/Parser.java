@@ -86,16 +86,14 @@ public class Parser implements IParser {
 	                match(Kind.SEMI);
 	            }
             }
-//            else{
-//                throw new SyntaxException("Error: invalid Program expression.");
-//
-//            }
-            
-
-
-            //Declaration();
+            if(!isKind(Kind.EOF)) {
+            	throw new SyntaxException("Error: unexpected kind after () in Program: " + t.getKind());
+            }
            
 
+        }
+        else {
+        	throw new SyntaxException("Error: expected TYPE but found " + t.getKind() + " in Program.");
         }
         prog = new Program(firstToken, type, name, parameters, defsAndStates);
         return prog;
@@ -121,7 +119,6 @@ public class Parser implements IParser {
                     dec = new NameDefWithDim(firstToken, type, t.getText(), d);
                 	match(Kind.IDENT);
                 }
-                //TODO FINISH THIS
 
             }
         }
@@ -167,7 +164,6 @@ public class Parser implements IParser {
         }
         else{
 
-            //TODO wierd cause this was logicalandexp before, so i changed it
             e = LogicalOrExpr();
 
         }
@@ -175,7 +171,7 @@ public class Parser implements IParser {
         return e;
     }
 
-    //TODO expr not done
+    
     public Expr ConditionalExpr() throws PLCException{
         IToken firstToken = tokens.get(0);
         Expr e  = null;
@@ -437,7 +433,6 @@ public class Parser implements IParser {
             match(IToken.Kind.COMMA);
             y = expr();
             consume(IToken.Kind.RSQUARE, "Expected right param");
-            //TODO, check this
             ast = new PixelSelector(firstToken, x, y);
         }
         else{
@@ -552,7 +547,6 @@ public class Parser implements IParser {
     private boolean isAtEnd() {
         return peek().getKind() == IToken.Kind.EOF;
     }
-    //TODO does this overlap with peek in the lexer class. Prob change this
     // I think no need because this is private and the lexer one will have to be called with lexer.peek()
     private IToken peek() {
         return tokens.get(curr);
