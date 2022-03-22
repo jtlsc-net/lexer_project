@@ -37,17 +37,17 @@ import static edu.ufl.cise.plc.ast.Types.Type.*;
 
 public class TypeCheckVisitor implements ASTVisitor {
 
-	SymbolTable symbolTable = new SymbolTable();  
+	SymbolTable symbolTable = new SymbolTable();
 	Program root;
-	
+
 	record Pair<T0,T1>(T0 t0, T1 t1){};  //may be useful for constructing lookup tables.
-	
+
 	private void check(boolean condition, ASTNode node, String message) throws TypeCheckException {
 		if (!condition) {
 			throw new TypeCheckException(message, node.getSourceLoc());
 		}
 	}
-	
+
 	//The type of a BooleanLitExpr is always BOOLEAN.  
 	//Set the type in AST Node for later passes (code generation)
 	//Return the type for convenience in this visitor.  
@@ -90,7 +90,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		consoleExpr.setType(Type.CONSOLE);
 		return Type.CONSOLE;
 	}
-	
+
 	//Visits the child expressions to get their type (and ensure they are correctly typed)
 	//then checks the given conditions.
 	@Override
@@ -103,10 +103,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Type exprType = (redType == Type.INT) ? Type.COLOR : Type.COLORFLOAT;
 		colorExpr.setType(exprType);
 		return exprType;
-	}	
+	}
 
-	
-	
+
+
 	//Maps forms a lookup table that maps an operator expression pair into result type.  
 	//This more convenient than a long chain of if-else statements. 
 	//Given combinations are legal; if the operator expression pair is not in the map, it is an error. 
@@ -118,8 +118,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 			new Pair<Kind,Type>(Kind.COLOR_OP,COLOR), INT,
 			new Pair<Kind,Type>(Kind.COLOR_OP,IMAGE), IMAGE,
 			new Pair<Kind,Type>(Kind.IMAGE_OP,IMAGE), INT
-			);
-	
+	);
+
 	//Visits the child expression to get the type, then uses the above table to determine the result type
 	//and check that this node represents a legal combination of operator and expression type. 
 	@Override
@@ -141,24 +141,96 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
 		//TODO:  implement this method
-		throw new UnsupportedOperationException("Unimplemented visit method.");
+
+		Kind op = binaryExpr.getOp().getKind();
+		Type leftType = (Type) binaryExpr.getLeft().visit(this, arg);
+		Type rightType = (Type) binaryExpr.getRight().visit(this, arg);
+		Type resultType = null;
+		switch(op) {
+			case AND,OR -> {
+				//TODO check if right
+				if (leftType == BOOLEAN && rightType == BOOLEAN) resultType = BOOLEAN;
+				else check(false, binaryExpr, "incompatible types for operator");
+			}
+			case EQUALS,NOT_EQUALS -> {
+				check(leftType == rightType, binaryExpr, "incompatible types for comparison");
+				resultType = Type.BOOLEAN;
+
+			}
+
+			case PLUS, MINUS -> {
+				if (leftType == Type.INT && rightType == Type.INT) resultType = Type.INT;
+				else if (leftType == Type.STRING && rightType == Type.STRING) resultType = Type.STRING;
+				else if (leftType == Type.BOOLEAN && rightType == Type.BOOLEAN) resultType = Type.BOOLEAN;
+				else if (leftType == FLOAT && rightType == FLOAT) resultType = Type.FLOAT;
+				else if (leftType == FLOAT && rightType == INT) resultType = Type.FLOAT;
+				else if (leftType == INT && rightType == FLOAT) resultType = Type.FLOAT;
+				else if (leftType == COLOR && rightType == COLOR) resultType = COLOR;
+				else if (leftType == COLORFLOAT && rightType == COLORFLOAT) resultType = COLORFLOAT;
+				else if (leftType == COLORFLOAT && rightType == COLOR) resultType = COLORFLOAT;
+				else if (leftType == COLOR && rightType == COLORFLOAT) resultType = COLORFLOAT;
+				else if (leftType == IMAGE && rightType == IMAGE) resultType = IMAGE;
+				else check(false, binaryExpr, "incompatible types for operator");
+
+			}
+			case TIMES -> {
+				if (leftType == Type.INT && rightType == Type.INT) resultType = Type.INT;
+				else if (leftType == Type.STRING && rightType == Type.STRING) resultType = Type.STRING;
+				else if (leftType == Type.BOOLEAN && rightType == Type.BOOLEAN) resultType = Type.BOOLEAN;
+				else if (leftType == FLOAT && rightType == FLOAT) resultType = Type.FLOAT;
+				else if (leftType == FLOAT && rightType == INT) resultType = Type.FLOAT;
+				else if (leftType == INT && rightType == FLOAT) resultType = Type.FLOAT;
+				else if (leftType == COLOR && rightType == COLOR) resultType = COLOR;
+				else if (leftType == COLORFLOAT && rightType == COLORFLOAT) resultType = COLORFLOAT;
+				else if (leftType == COLORFLOAT && rightType == COLOR) resultType = COLORFLOAT;
+				else if (leftType == COLOR && rightType == COLORFLOAT) resultType = COLORFLOAT;
+				else if (leftType == IMAGE && rightType == IMAGE) resultType = IMAGE;
+				else if (leftType == IMAGE && rightType == INT) resultType = IMAGE;
+				else if (leftType == IMAGE && rightType == FLOAT) resultType = IMAGE;
+				else if (leftType == INT && rightType == COLOR) resultType = COLOR;
+				else if (leftType == COLOR && rightType == INT) resultType = COLOR;
+				else if (leftType == FLOAT && rightType == COLOR) resultType = COLORFLOAT;
+				else if (leftType == COLOR && rightType == FLOAT) resultType = COLORFLOAT;
+				else check(false, binaryExpr, "incompatible types for operator");
+			}
+			case DIV -> {
+				if (leftType == Type.INT && rightType == Type.INT) resultType = Type.INT;
+				else if (leftType == FLOAT && rightType == FLOAT) resultType = Type.FLOAT;
+				else check(false, binaryExpr, "incompatible types for operator");
+			}
+			case LT, LE, GT, GE -> {
+				//TODO edit this section
+
+				if (leftType == rightType) resultType = Type.BOOLEAN;
+
+				else check(false, binaryExpr, "incompatible types for operator");
+			}
+			default -> {
+				throw new Exception("compiler error");
+			}
+		}
+		binaryExpr.setType(resultType);
+		return resultType;
 	}
+
+
+
 
 	@Override
 	public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws Exception {
 		//TODO:  implement this method
-		throw new UnsupportedOperationException("Unimplemented visit method.");
 
-		String name = identExpr.getName();
+		//
+		String name = identExpr.getText();
 		Declaration dec = symbolTable.lookup(name);
 		check(dec != null, identExpr, "undefined identifier " + name);
 
-		check(dec.isAssigned(), identExpr, "using uninitialized variable");
-		identExpr.setDec(dec);  //save declaration--will be useful later.
+		check(dec.isInitialized(), identExpr, "using uninitialized variable");
+		identExpr.setDec(dec);
 		Type type = dec.getType();
 		identExpr.setType(type);
 
-		return
+		return type;
 	}
 
 	@Override
@@ -174,7 +246,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	}
 
 	@Override
-	//This method can only be used to check PixelSelector objects on the right hand side of an assignment. 
+	//This method can only be used to check PixelSelector objects on the right hand side of an assignment.
 	//Either modify to pass in context info and add code to handle both cases, or when on left side
 	//of assignment, check fields from parent assignment statement.
 	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
@@ -187,7 +259,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 	@Override
 	//This method several cases--you don't have to implement them all at once.
-	//Work incrementally and systematically, testing as you go.  
+	//Work incrementally and systematically, testing as you go.
 	public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
 		//TODO:  implement this method
 		throw new UnsupportedOperationException("Unimplemented visit method.");
@@ -218,12 +290,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 
 	@Override
-	public Object visitProgram(Program program, Object arg) throws Exception {		
-		//TODO:  this method is incomplete, finish it.  
-		
+	public Object visitProgram(Program program, Object arg) throws Exception {
+		//TODO:  this method is incomplete, finish it.
+
 		//Save root of AST so return type can be accessed in return statements
 		root = program;
-		
+
 		//Check declarations and statements
 		List<ASTNode> decsAndStatements = program.getDecsAndStatements();
 		for (ASTNode node : decsAndStatements) {
@@ -235,6 +307,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
 		//TODO:  implement this method
+
+
+
 		throw new UnsupportedOperationException();
 	}
 
@@ -243,7 +318,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		//TODO:  implement this method
 		throw new UnsupportedOperationException();
 	}
- 
+
 	@Override
 	public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
 		Type returnType = root.getReturnType();  //This is why we save program in visitProgram.
