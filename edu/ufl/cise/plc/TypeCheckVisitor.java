@@ -48,13 +48,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		boolean flag = false ;
 
 		if(targetType == rhsType){
-
-		}
-		else if(targetType==Type.STRING && rhsType==Type.INT) {
-
-		}
-		else if(targetType==Type.STRING && rhsType==Type.BOOLEAN){
-
+			flag=true;
 		}
 
 		return flag;
@@ -345,9 +339,33 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Declaration declaration = symbolTable.lookup(name);
 		check(declaration != null, assignmentStatement, "undeclared variable " + name);
 		Type expressionType= (Type) assignmentStatement.getExpr().visit(this, arg);
-		check(assignmentCompatible(declaration.getType(), expressionType), assignmentStatement, "incompatible types in assignment");
 		declaration.setInitialized(true);
-		return null;
+
+		if(declaration.getType() != Type.IMAGE) {
+			boolean flag = false;
+			if(declaration.getType() == INT && expressionType ==FLOAT){
+				assignmentStatement.getExpr().setCoerceTo(INT);
+				flag = true;
+			}
+			if(declaration.getType() == FLOAT && expressionType ==INT){
+				assignmentStatement.getExpr().setCoerceTo(FLOAT);
+				flag = true;
+			}
+			if(declaration.getType() == INT && expressionType ==COLOR){
+				assignmentStatement.getExpr().setCoerceTo(INT);
+				flag = true;
+			}
+			if(declaration.getType() == COLOR && expressionType ==INT){
+				assignmentStatement.getExpr().setCoerceTo(COLOR);
+				flag = true;
+			}
+
+			check(assignmentCompatible(declaration.getType(), expressionType)|| flag==true, assignmentStatement, "incompatible types in assignment");
+		}
+
+		//TODO NOT DONE< FIX/FINISH
+		else if( declaration.getType() == IMAGE && declaration.getDim() != null)
+			return null;
 
 	}
 
@@ -373,7 +391,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Declaration declaration = symbolTable.lookup(name);
 		check(declaration != null, readStatement, "undeclared variable " + name);
 		Type lhs = declaration.getType();
-
+		readStatement.getSelector();
 
 
 		//TODO check if it is the lhs declaration, may be wrong
