@@ -42,7 +42,23 @@ public class TypeCheckVisitor implements ASTVisitor {
 	Program root;
 
 	record Pair<T0,T1>(T0 t0, T1 t1){};  //may be useful for constructing lookup tables.
+	private boolean assignmentCompatible(Type targetType, Type rhsType) {
 
+		//TODO CHANGE FOR NEEDED
+		boolean flag = false ;
+
+		if(targetType == rhsType){
+
+		}
+		else if(targetType==Type.STRING && rhsType==Type.INT) {
+
+		}
+		else if(targetType==Type.STRING && rhsType==Type.BOOLEAN){
+
+		}
+
+		return flag;
+	}
 	private void check(boolean condition, ASTNode node, String message) throws TypeCheckException {
 		if (!condition) {
 			throw new TypeCheckException(message, node.getSourceLoc());
@@ -87,9 +103,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 		//TODO:  implement this method
 
 
+		//TODO check if needs to be more complex
 
-
-		throw new UnsupportedOperationException("Unimplemented visit method.");
+		colorConstExpr.setType(COLOR);
+		return Type.COLOR;
 	}
 
 	@Override
@@ -239,7 +256,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}
 
 			case LT, LE, GT, GE -> {
-				//TODO edit this section
+
 				if (leftType == Type.INT && rightType == Type.INT) resultType = BOOLEAN;
 				else if (leftType == FLOAT && rightType == FLOAT) resultType = BOOLEAN;
 				else if (leftType == FLOAT && rightType == INT){
@@ -285,7 +302,17 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
 		//TODO  implement this method
-		throw new UnsupportedOperationException();
+		Type condition = (Type) conditionalExpr.getCondition().visit(this, arg);
+		check(condition == BOOLEAN, conditionalExpr, "Type of condition must be boolean");
+
+		//TODO fix this
+		//	Type trueCaseType = (Type) conditionalExpr.getCondition().visit(this, arg);
+		//	check(trueCaseType == , conditionalExpr, "Type of trueCase must be the same as the type of falseCase");
+
+
+
+
+
 	}
 
 	@Override
@@ -312,7 +339,15 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
 		//TODO:  implement this method
 
+//TODO ADD MORE STUFF/ CHECK IF THE THING DOWN BELOW IS RIGHT
 
+		String name = assignmentStatement.getName();
+		Declaration declaration = symbolTable.lookup(name);
+		check(declaration != null, assignmentStatement, "undeclared variable " + name);
+		Type expressionType= (Type) assignmentStatement.getExpr().visit(this, arg);
+		check(assignmentCompatible(declaration.getType(), expressionType), assignmentStatement, "incompatible types in assignment");
+		declaration.setInitialized(true);
+		return null;
 
 	}
 
