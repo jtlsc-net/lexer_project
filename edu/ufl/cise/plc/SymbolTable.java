@@ -17,6 +17,6 @@ public class SymbolTable {
     public Declaration  lookup(String name){
         return symbolMap.get(name);
     }
-
+    public void remove(String name){symbolMap.remove(name);}
 
 }

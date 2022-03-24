@@ -34,6 +34,8 @@ import edu.ufl.cise.plc.ast.UnaryExprPostfix;
 import edu.ufl.cise.plc.ast.VarDeclaration;
 import edu.ufl.cise.plc.ast.WriteStatement;
 
+import javax.naming.Name;
+
 import static edu.ufl.cise.plc.ast.Types.Type.*;
 
 public class TypeCheckVisitor implements ASTVisitor {
@@ -59,9 +61,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 		}
 	}
 
-	//The type of a BooleanLitExpr is always BOOLEAN.
+	//The type of a BooleanLitExpr is always BOOLEAN.  
 	//Set the type in AST Node for later passes (code generation)
-	//Return the type for convenience in this visitor.
+	//Return the type for convenience in this visitor.  
 	@Override
 	public Object visitBooleanLitExpr(BooleanLitExpr booleanLitExpr, Object arg) throws Exception {
 		booleanLitExpr.setType(Type.BOOLEAN);
@@ -125,9 +127,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 
 
-	//Maps forms a lookup table that maps an operator expression pair into result type.
-	//This more convenient than a long chain of if-else statements.
-	//Given combinations are legal; if the operator expression pair is not in the map, it is an error.
+	//Maps forms a lookup table that maps an operator expression pair into result type.  
+	//This more convenient than a long chain of if-else statements. 
+	//Given combinations are legal; if the operator expression pair is not in the map, it is an error. 
 	Map<Pair<Kind,Type>, Type> unaryExprs = Map.of(
 			new Pair<Kind,Type>(Kind.BANG,BOOLEAN), BOOLEAN,
 			new Pair<Kind,Type>(Kind.MINUS, FLOAT), FLOAT,
@@ -139,7 +141,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	);
 
 	//Visits the child expression to get the type, then uses the above table to determine the result type
-	//and check that this node represents a legal combination of operator and expression type.
+	//and check that this node represents a legal combination of operator and expression type. 
 	@Override
 	public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws Exception {
 		// !, -, getRed, getGreen, getBlue
@@ -148,14 +150,14 @@ public class TypeCheckVisitor implements ASTVisitor {
 		//Use the lookup table above to both check for a legal combination of operator and expression, and to get result type.
 		Type resultType = unaryExprs.get(new Pair<Kind,Type>(op,exprType));
 		check(resultType != null, unaryExpr, "incompatible types for unaryExpr");
-		//Save the type of the unary expression in the AST node for use in code generation later.
+		//Save the type of the unary expression in the AST node for use in code generation later. 
 		unaryExpr.setType(resultType);
 		//return the type for convenience in this visitor.
 		return resultType;
 	}
 
 
-	//This method has several cases. Work incrementally and test as you go.
+	//This method has several cases. Work incrementally and test as you go. 
 	@Override
 	public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
 		//TODO:  implement this method
@@ -316,7 +318,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	}
 
 	@Override
-	//This method can only be used to check PixelSelector objects on the right hand side of an assignment.
+	//This method can only be used to check PixelSelector objects on the right hand side of an assignment. 
 	//Either modify to pass in context info and add code to handle both cases, or when on left side
 	//of assignment, check fields from parent assignment statement.
 	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
@@ -329,11 +331,11 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 	@Override
 	//This method several cases--you don't have to implement them all at once.
-	//Work incrementally and systematically, testing as you go.
+	//Work incrementally and systematically, testing as you go.  
 	public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
 		//TODO:  implement this method
 
-//TODO ADD MORE STUFF/ CHECK IF THE THING DOWN BELOW IS RIGHT
+//TODO CHECK IF THE THING DOWN BELOW IS RIGHT
 
 		String name = assignmentStatement.getName();
 		Declaration declaration = symbolTable.lookup(name);
@@ -361,11 +363,55 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}
 
 			check(assignmentCompatible(declaration.getType(), expressionType)|| flag==true, assignmentStatement, "incompatible types in assignment");
+			return expressionType;
 		}
 
-		//TODO NOT DONE< FIX/FINISH
-		else if( declaration.getType() == IMAGE && declaration.getDim() != null)
-			return null;
+
+		else if( declaration.getType() == IMAGE && assignmentStatement.getSelector() == null){
+			boolean flag = false;
+			if(declaration.getType() == IMAGE && expressionType ==IMAGE){
+				flag = true;
+			}
+			if(declaration.getType() == IMAGE && expressionType ==INT){
+				assignmentStatement.getExpr().setCoerceTo(COLOR);
+				flag = true;
+			}
+			if(declaration.getType() == IMAGE && expressionType ==FLOAT){
+				assignmentStatement.getExpr().setCoerceTo(COLORFLOAT);
+				flag = true;
+			}
+			if(declaration.getType() == IMAGE && expressionType ==COLORFLOAT){
+				flag = true;
+			}
+			if(declaration.getType() == IMAGE && expressionType ==COLOR){
+				flag = true;
+			}
+			check(flag==true, assignmentStatement, "incompatible types in assignment");
+			return expressionType;
+		}
+		else if(declaration.getType() == IMAGE && assignmentStatement.getSelector() != null){
+
+			String pixel1 =  assignmentStatement.getSelector().getX().getText();
+			String pixel2 =  assignmentStatement.getSelector().getY().getText();
+
+			Declaration dec1 = symbolTable.lookup(pixel1);
+			Declaration dec2 = symbolTable.lookup(pixel2);
+
+			check(dec1 == null, assignmentStatement, "Pixel 1 can't declared variable " + pixel1);
+			check(dec2 == null, assignmentStatement, "Pixel 2 can't declared variable  " + pixel2);
+			boolean flag = false;
+			if( expressionType ==INT || expressionType == FLOAT|| expressionType == COLOR || expressionType == COLORFLOAT){
+				assignmentStatement.getExpr().setCoerceTo(COLOR);
+				flag = true;
+			}
+
+			check(flag ==  true , assignmentStatement, "incompatible types in assignment");
+
+			return expressionType;
+		}
+
+
+		return null;
 
 	}
 
@@ -391,13 +437,14 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Declaration declaration = symbolTable.lookup(name);
 		check(declaration != null, readStatement, "undeclared variable " + name);
 		Type lhs = declaration.getType();
-		readStatement.getSelector();
-
+		check(readStatement.getSelector() == null, readStatement, "Read Statement cannot have Pixel Statement" );
+		Type rhs = (Type) readStatement.getSource().getType();
+		check(rhs == CONSOLE || rhs == STRING, readStatement, "Right hand side must be Console or String" );
 
 		//TODO check if it is the lhs declaration, may be wrong
-		readStatement.setTargetDec(declaration);
+		readStatement.getTargetDec().setInitialized(true);
 
-
+		return null;
 
 	}
 
@@ -412,6 +459,13 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitProgram(Program program, Object arg) throws Exception {
 		//TODO:  this method is incomplete, finish it.
 
+		List<NameDef> nameDefParam = program.getParams();
+		//TODO this needs to be checked
+		for (NameDef node : nameDefParam) {
+			node.visit(this, arg);
+			node.setInitialized(true);
+
+		}
 
 
 		//Save root of AST so return type can be accessed in return statements
@@ -429,18 +483,28 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
 		//TODO:  implement this method
 		String name = nameDef.getName();
+
 		boolean inserted = symbolTable.insert(name,nameDef);
 		check(inserted, nameDef, "variable " + name + "already declared");
 		//	Expr initializer = nameDef.get;
+		//TODO ADD
+
+		//	if(nameDef.getType() == IMAGE){
 
 
+		//	}
 
-		throw new UnsupportedOperationException();
+
+		return null;
 	}
 
 	@Override
 	public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
 		//TODO:  implement this method
+		check(nameDefWithDim.getDim().getHeight().getType()==INT &&nameDefWithDim.getDim().getWidth().getType()==INT,
+				nameDefWithDim, "both expressions must be int" );
+
+
 		throw new UnsupportedOperationException();
 	}
 
