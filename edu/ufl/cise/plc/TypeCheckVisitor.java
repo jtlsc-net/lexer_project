@@ -61,9 +61,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 		}
 	}
 
-	//The type of a BooleanLitExpr is always BOOLEAN.  
+	//The type of a BooleanLitExpr is always BOOLEAN.
 	//Set the type in AST Node for later passes (code generation)
-	//Return the type for convenience in this visitor.  
+	//Return the type for convenience in this visitor.
 	@Override
 	public Object visitBooleanLitExpr(BooleanLitExpr booleanLitExpr, Object arg) throws Exception {
 		booleanLitExpr.setType(Type.BOOLEAN);
@@ -127,9 +127,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 
 
-	//Maps forms a lookup table that maps an operator expression pair into result type.  
-	//This more convenient than a long chain of if-else statements. 
-	//Given combinations are legal; if the operator expression pair is not in the map, it is an error. 
+	//Maps forms a lookup table that maps an operator expression pair into result type.
+	//This more convenient than a long chain of if-else statements.
+	//Given combinations are legal; if the operator expression pair is not in the map, it is an error.
 	Map<Pair<Kind,Type>, Type> unaryExprs = Map.of(
 			new Pair<Kind,Type>(Kind.BANG,BOOLEAN), BOOLEAN,
 			new Pair<Kind,Type>(Kind.MINUS, FLOAT), FLOAT,
@@ -141,7 +141,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	);
 
 	//Visits the child expression to get the type, then uses the above table to determine the result type
-	//and check that this node represents a legal combination of operator and expression type. 
+	//and check that this node represents a legal combination of operator and expression type.
 	@Override
 	public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws Exception {
 		// !, -, getRed, getGreen, getBlue
@@ -150,14 +150,14 @@ public class TypeCheckVisitor implements ASTVisitor {
 		//Use the lookup table above to both check for a legal combination of operator and expression, and to get result type.
 		Type resultType = unaryExprs.get(new Pair<Kind,Type>(op,exprType));
 		check(resultType != null, unaryExpr, "incompatible types for unaryExpr");
-		//Save the type of the unary expression in the AST node for use in code generation later. 
+		//Save the type of the unary expression in the AST node for use in code generation later.
 		unaryExpr.setType(resultType);
 		//return the type for convenience in this visitor.
 		return resultType;
 	}
 
 
-	//This method has several cases. Work incrementally and test as you go. 
+	//This method has several cases. Work incrementally and test as you go.
 	@Override
 	public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
 		//TODO:  implement this method
@@ -318,7 +318,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	}
 
 	@Override
-	//This method can only be used to check PixelSelector objects on the right hand side of an assignment. 
+	//This method can only be used to check PixelSelector objects on the right hand side of an assignment.
 	//Either modify to pass in context info and add code to handle both cases, or when on left side
 	//of assignment, check fields from parent assignment statement.
 	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
@@ -331,7 +331,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 	@Override
 	//This method several cases--you don't have to implement them all at once.
-	//Work incrementally and systematically, testing as you go.  
+	//Work incrementally and systematically, testing as you go.
 	public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
 		//TODO:  implement this method
 
@@ -406,7 +406,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}
 
 			check(flag ==  true , assignmentStatement, "incompatible types in assignment");
-
+			symbolTable.remove(pixel1);
+			symbolTable.remove(pixel2);
 			return expressionType;
 		}
 
