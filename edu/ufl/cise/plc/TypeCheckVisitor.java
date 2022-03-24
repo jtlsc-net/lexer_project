@@ -301,13 +301,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Type condition = (Type) conditionalExpr.getCondition().visit(this, arg);
 		check(condition == BOOLEAN, conditionalExpr, "Type of condition must be boolean");
 
-		//TODO fix this
-		//	Type trueCaseType = (Type) conditionalExpr.getCondition().visit(this, arg);
-		//	check(trueCaseType == , conditionalExpr, "Type of trueCase must be the same as the type of falseCase");
+		check(conditionalExpr.getTrueCase().getType() == conditionalExpr.getTrueCase().getType(), conditionalExpr,
+				"Type of trueCase must be the same as the type of falseCase");
+		check(condition == conditionalExpr.getTrueCase().getType(), conditionalExpr,
+				"Type of trueCase must be the same as the type of falseCase");
 
-
-
-
+		return condition;
 
 	}
 
