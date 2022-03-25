@@ -1,4 +1,5 @@
 package edu.ufl.cise.plc;
+import edu.ufl.cise.plc.ast.ASTVisitor;
 
 //This class eliminates hard coded dependencies on the actual Lexer class.  You can call your lexer whatever you
 //want as long as it implements the ILexer interface and you have provided an appropriate body for the getLexer method.
@@ -18,6 +19,10 @@ public class CompilerComponentFactory {
 
 	public static IParser getParser(String input) throws Exception{
 		return new Parser(input);
+	}
+	
+	public static ASTVisitor getTypeChecker() throws Exception {
+		return new TypeCheckVisitor();
 	}
 
 }
