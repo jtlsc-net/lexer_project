@@ -451,6 +451,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
 		//TODO:  implement this method
+
 		throw new UnsupportedOperationException("Unimplemented visit method.");
 	}
 
@@ -483,16 +484,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
 		//TODO:  implement this method
 		String name = nameDef.getName();
-
 		boolean inserted = symbolTable.insert(name,nameDef);
 		check(inserted, nameDef, "variable " + name + "already declared");
-		//	Expr initializer = nameDef.get;
-		//TODO ADD
 
-		//	if(nameDef.getType() == IMAGE){
-
-
-		//	}
 
 
 		return null;
@@ -501,11 +495,15 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
 		//TODO:  implement this method
+		String name = nameDefWithDim.getName();
+		boolean inserted = symbolTable.insert(name,nameDefWithDim);
+		check(inserted, nameDefWithDim, "variable " + name + "already declared");
+
 		check(nameDefWithDim.getDim().getHeight().getType()==INT &&nameDefWithDim.getDim().getWidth().getType()==INT,
 				nameDefWithDim, "both expressions must be int" );
 
 
-		throw new UnsupportedOperationException();
+		return null;
 	}
 
 	@Override
