@@ -461,14 +461,34 @@ public class TypeCheckVisitor implements ASTVisitor {
 		if(initializer != null) {
 			Declaration rhs = symbolTable.lookup(initializer.getText());
 			initializer.setType(rhs.getType());
+			boolean flag = false;
 			if (rhs != null) {
-				//infer type of initializer
-				System.out.println(initializer.getText());
+				if(!rhs.isInitialized()) {
+					throw new TypeCheckException("Can't assign to variable that is not initialized.");
+				}
 				Type initializerType = initializer.getType();  // Get type of Expr on rhs of declaration.
-				check(assignmentCompatible(declaration.getType(), initializerType),declaration, 
+				if(declaration.getType() != initializerType  && declaration.getType() != Type.IMAGE) {
+					if(declaration.getType() == INT && initializerType ==FLOAT){
+						initializer.setCoerceTo(INT);
+						flag = true;
+					}
+					if(declaration.getType() == FLOAT && initializerType ==INT){
+						initializer.setCoerceTo(FLOAT);
+						flag = true;
+					}
+					if(declaration.getType() == INT && initializerType ==COLOR){
+						initializer.setCoerceTo(INT);
+						flag = true;
+					}
+					if(declaration.getType() == COLOR && initializerType ==INT){
+						initializer.setCoerceTo(COLOR);
+						flag = true;
+					}
+				}
+				check(assignmentCompatible(declaration.getType(), initializerType) || flag == true,declaration, 
 				"type of expression and declared type do not match");
-				declaration.setInitialized(true);
 			}
+			declaration.setInitialized(true);
 			return null;
 		}
 		return null;
