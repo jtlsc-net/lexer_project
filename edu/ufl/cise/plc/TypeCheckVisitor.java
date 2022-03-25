@@ -453,7 +453,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		//TODO:  implement this method
 
 		// throw new UnsupportedOperationException("Unimplemented visit method.");
-		
+
 		String name = declaration.getName();
 		boolean inserted = symbolTable.insert(name,declaration);
 		check(inserted, declaration, "variable " + name + "already declared");
@@ -461,8 +461,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 		if (initializer != null) {
 			//infer type of initializer
 			Type initializerType = (Type) initializer.getType();  // Get type of Expr on rhs of declaration.
-			check(assignmentCompatible(declaration.getType(), initializerType),declaration, 
-			"type of expression and declared type do not match");
+			check(assignmentCompatible(declaration.getType(), initializerType),declaration,
+					"type of expression and declared type do not match");
 			declaration.setInitialized(true);
 		}
 		return null;
