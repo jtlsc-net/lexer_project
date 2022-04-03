@@ -20,9 +20,13 @@ public class CompilerComponentFactory {
 	public static IParser getParser(String input) throws Exception{
 		return new Parser(input);
 	}
-	
+
 	public static ASTVisitor getTypeChecker() throws Exception {
 		return new TypeCheckVisitor();
+	}
+	public static ASTVisitor getCodeGenerator(String packageName) {
+
+		return new CodeGenVisitor(packageName);
 	}
 
 }
