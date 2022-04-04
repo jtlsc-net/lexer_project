@@ -40,7 +40,13 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitBooleanLitExpr(BooleanLitExpr booleanLitExpr, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        boolean bool = booleanLitExpr.getValue();
+
+        sb.append(booleanLitExpr.getText());
+
+        return ((CodeGenStringBuilder) arg).append(sb);
+
     }
 
     @Override
@@ -77,7 +83,19 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitFloatLitExpr(FloatLitExpr floatLitExpr, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        Type type = floatLitExpr.getType();
+        float floatValue = floatLitExpr.getValue();
+
+
+
+        sb.append(floatLitExpr.getText());
+        sb.append("f");
+
+        if (floatLitExpr.getCoerceTo() != Type.FLOAT && floatLitExpr.getCoerceTo() != null) {
+            genTypeConversion(type, floatLitExpr.getCoerceTo(), sb);
+        }
+        return ((CodeGenStringBuilder) arg).append(sb);
     }
 
     @Override
@@ -112,10 +130,10 @@ public class CodeGenVisitor implements ASTVisitor{
         if (type == Type.IMAGE || type == Type.COLOR || type == Type.COLORFLOAT)
             throw new UnsupportedOperationException("Not implemented");
         else {
-
+            sb.lparen();
             sb.append(unaryExpression.getOp().getText());
             unaryExpression.getExpr().visit(this, sb);
-
+            sb.rparen();
 
         }
         if (unaryExpression.getCoerceTo() != type) {
@@ -198,7 +216,21 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        String name = readStatement.getName();
+        Expr expr = readStatement.getSource();
+
+        if(readStatement.getSource().getType() != Type.CONSOLE){
+            throw new UnsupportedOperationException("Not implemented");
+        }
+        else {
+            sb.append(name);
+            sb.equals();
+            sb.append(expr.getText());
+            sb.semi();
+        }
+
+        return ((CodeGenStringBuilder) arg).append(sb);
     }
 
     @Override
@@ -208,7 +240,27 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
-        return null;
+
+
+
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        Type type = nameDef.getType();
+        String name = nameDef.getName();
+
+
+
+
+        //TODO Need help on this
+
+
+        //sb.append
+        sb.append(name);
+
+
+        //      if (unaryExpression.getCoerceTo() != type) {
+        //        genTypeConversion(type, unaryExpression.getCoerceTo(), sb);
+        //  }
+        return ((CodeGenStringBuilder) arg).append(sb);
     }
 
     @Override

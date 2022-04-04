@@ -28,6 +28,11 @@ public class CodeGenStringBuilder {
         delegate.append(")");
         return this;
     }
+    public CodeGenStringBuilder equals() {
+        delegate.append("=");
+        return this;
+    }
+
     public CodeGenStringBuilder semi() {
         delegate.append(";");
         return this;
