@@ -13,6 +13,11 @@ public class CodeGenStringBuilder {
         delegate.append(",");
         return this;
     }
+    public CodeGenStringBuilder stringQuotes(){
+        delegate.append("\"\"\"");
+        return this;
+    }
+
 
     public CodeGenStringBuilder lparen() {
         delegate.append("(");
@@ -30,6 +35,7 @@ public class CodeGenStringBuilder {
 
     public CodeGenStringBuilder newline() {
         //TODO fix
-
+        delegate.append("\n");
+        return this;
     }
 }

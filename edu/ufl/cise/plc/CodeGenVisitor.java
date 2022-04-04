@@ -45,12 +45,34 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        Type type = stringLitExpr.getType();
+
+        //TODO check if append is right
+        sb.stringQuotes();
+        sb.append(stringLitExpr.getValue());
+        sb.stringQuotes();
+
+
+        return ((CodeGenStringBuilder) arg).append(sb);
     }
 
     @Override
     public Object visitIntLitExpr(IntLitExpr intLitExpr, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        Type type = intLitExpr.getType();
+
+
+        int intValue = intLitExpr.getValue();
+
+        //TODO check if right
+        sb.append(String.valueOf(intValue));
+
+        if (intLitExpr.getCoerceTo() != type && intLitExpr.getCoerceTo() != null)  {
+            genTypeConversion(type, intLitExpr.getCoerceTo(), sb);
+        }
+        return ((CodeGenStringBuilder) arg).append(sb);
+
     }
 
     @Override
@@ -75,7 +97,31 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpression, Object arg) throws Exception {
-        return null;
+
+
+
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        Type type = unaryExpression.getType();
+        Expr expr = unaryExpression.getExpr();
+
+
+        Kind op = unaryExpression.getOp().getKind();
+        Type exprType = expr.getCoerceTo() != null ? expr.getCoerceTo() : expr.getType();
+
+        //TODO check if binary expr is in assignment 5
+        if (type == Type.IMAGE || type == Type.COLOR || type == Type.COLORFLOAT)
+            throw new UnsupportedOperationException("Not implemented");
+        else {
+
+            sb.append(unaryExpression.getOp().getText());
+            unaryExpression.getExpr().visit(this, sb);
+
+
+        }
+        if (unaryExpression.getCoerceTo() != type) {
+            genTypeConversion(type, unaryExpression.getCoerceTo(), sb);
+        }
+        return ((CodeGenStringBuilder) arg).append(sb);
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
@@ -86,25 +132,43 @@ public class CodeGenVisitor implements ASTVisitor{
         Type leftType = leftExpr.getCoerceTo() != null ? leftExpr.getCoerceTo() : leftExpr.getType();
         Type rightType = rightExpr.getCoerceTo() != null ? rightExpr.getCoerceTo() : rightExpr.getType();
         Kind op = binaryExpr.getOp().getKind();
-        if (not handled in assignment 5)
-            throw new UnsupportedOperationException("Not implemented");
-        else {
-            sb.lparen();
 
-            binaryExpr.getLeft().visit(this, sb);
-            sb.append(binaryExpr.getOp().getText());
-            binaryExpr.getRight().visit(this, sb);
-            sb.rparen();
-        }
+        //TODO check if binary expr is in assignment 5
+        // if (not handled in assignment 5)
+        //      throw new UnsupportedOperationException("Not implemented");
+        //else {
+        sb.lparen();
+
+        binaryExpr.getLeft().visit(this, sb);
+
+        sb.append(binaryExpr.getOp().getText());
+        binaryExpr.getRight().visit(this, sb);
+        sb.rparen();
+        //}
         if (binaryExpr.getCoerceTo() != type) {
             genTypeConversion(type, binaryExpr.getCoerceTo(), sb);
         }
         return ((CodeGenStringBuilder) arg).append(sb);
-}
+    }
 
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        Type type = identExpr.getType();
+        String text = identExpr.getText();
+
+        //TODO might be wrong visit/also check if it needed
+        //  identExpr.visit(this, sb);
+        sb.append(text);
+
+
+        if (identExpr.getCoerceTo() != type && identExpr.getCoerceTo() != null)  {
+            genTypeConversion(type, identExpr.getCoerceTo(), sb);
+        }
+
+
+        return ((CodeGenStringBuilder) arg).append(sb);
+
     }
 
     @Override

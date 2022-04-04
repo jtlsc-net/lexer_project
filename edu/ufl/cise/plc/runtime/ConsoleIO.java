@@ -17,14 +17,14 @@ public class ConsoleIO {
 	 * code should use ConsoleIO.console.println(...) etc. instead of System.out.println
 	 */
 	public static PrintStream console = System.out;
-	
+
 	public void setConsole(PrintStream out) {
 		console = out;
 	}
 
 	/** Source of "console" input. */
 	static InputStream consoleInput = System.in;
-	
+
 	public void setConsoleInput(InputStream in) {
 		consoleInput = in;
 	}
@@ -46,9 +46,9 @@ public class ConsoleIO {
 	 * "INT", "FLOAT", "STRING", or "COLOR". If the scanner cannot convert the input
 	 * token to the expected type, it will print "INVALID INPUT" and read another
 	 * token.
-	 * 
+	 *
 	 * See readImage to read an image.
-	 * 
+	 *
 	 * @param type   type of value to read
 	 * @param prompt prompt to user for value
 	 * @return
@@ -58,17 +58,17 @@ public class ConsoleIO {
 		Scanner scanner = getScanner();
 		try {
 			return switch (type) {
-			case "INT" -> scanner.nextInt();
-			case "FLOAT" -> scanner.nextFloat();
-			case "STRING" -> scanner.nextLine();
-			case "COLOR" -> {
-				int r = scanner.nextInt();
-				int g = scanner.nextInt();
-				int b = scanner.nextInt();
-				yield new ColorTuple(r, g, b);
-			}
-			case "BOOLEAN" -> scanner.nextBoolean();
-			default -> throw new IllegalArgumentException("Compiler bug Unexpected value: " + type);
+				case "INT" -> scanner.nextInt();
+				case "FLOAT" -> scanner.nextFloat();
+				case "STRING" -> scanner.nextLine();
+				//case "COLOR" -> {
+				//	int r = scanner.nextInt();
+				//	int g = scanner.nextInt();
+				//	int b = scanner.nextInt();
+				//	yield new ColorTuple(r, g, b);
+				//}
+				case "BOOLEAN" -> scanner.nextBoolean();
+				default -> throw new IllegalArgumentException("Compiler bug Unexpected value: " + type);
 			};
 		} catch (InputMismatchException e) {
 			console.print("INVALID INPUT ");
@@ -79,7 +79,7 @@ public class ConsoleIO {
 
 	/**
 	 * Displays the given image on the screen.
-	 * 
+	 *
 	 * @param image
 	 */
 	public static void displayImageOnScreen(BufferedImage image) {
@@ -101,8 +101,8 @@ public class ConsoleIO {
 		}
 
 	}
-	
 
-	
+
+
 
 }
