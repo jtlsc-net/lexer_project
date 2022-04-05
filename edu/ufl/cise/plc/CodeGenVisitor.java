@@ -45,7 +45,7 @@ public class CodeGenVisitor implements ASTVisitor{
 
         sb.append(booleanLitExpr.getText());
 
-        return ((CodeGenStringBuilder) arg).append(sb);
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
 
     }
 
@@ -60,7 +60,7 @@ public class CodeGenVisitor implements ASTVisitor{
         sb.stringQuotes();
 
 
-        return ((CodeGenStringBuilder) arg).append(sb);
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
     }
 
     @Override
@@ -77,7 +77,7 @@ public class CodeGenVisitor implements ASTVisitor{
         if (intLitExpr.getCoerceTo() != type && intLitExpr.getCoerceTo() != null)  {
             genTypeConversion(type, intLitExpr.getCoerceTo(), sb);
         }
-        return ((CodeGenStringBuilder) arg).append(sb);
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
 
     }
 
@@ -95,7 +95,7 @@ public class CodeGenVisitor implements ASTVisitor{
         if (floatLitExpr.getCoerceTo() != Type.FLOAT && floatLitExpr.getCoerceTo() != null) {
             genTypeConversion(type, floatLitExpr.getCoerceTo(), sb);
         }
-        return ((CodeGenStringBuilder) arg).append(sb);
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
     }
 
     @Override
@@ -139,7 +139,7 @@ public class CodeGenVisitor implements ASTVisitor{
         if (unaryExpression.getCoerceTo() != type) {
             genTypeConversion(type, unaryExpression.getCoerceTo(), sb);
         }
-        return ((CodeGenStringBuilder) arg).append(sb);
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
@@ -166,7 +166,7 @@ public class CodeGenVisitor implements ASTVisitor{
         if (binaryExpr.getCoerceTo() != type) {
             genTypeConversion(type, binaryExpr.getCoerceTo(), sb);
         }
-        return ((CodeGenStringBuilder) arg).append(sb);
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
     }
 
     @Override
@@ -185,13 +185,27 @@ public class CodeGenVisitor implements ASTVisitor{
         }
 
 
-        return ((CodeGenStringBuilder) arg).append(sb);
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
 
     }
 
     @Override
+    //( <condition> ) ? <trueCase> : <falseCase>
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+
+        String name = conditionalExpr.getCondition().getText();
+        Expr trueExpr= conditionalExpr.getTrueCase();
+        Expr falseExpr= conditionalExpr.getFalseCase();
+        sb.lparen();
+        sb.append(name);
+        sb.rparen();
+        sb.question();
+        trueExpr.visit(this,sb);
+        sb.colon();
+        falseExpr.visit(this,sb);
+
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
     }
 
     @Override
@@ -206,7 +220,20 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+
+        String name = assignmentStatement.getName();
+        Expr expr = assignmentStatement.getExpr();
+
+
+        sb.append(name);
+        sb.equals();
+        expr.visit(this,sb);
+        sb.append(expr.getText());
+        sb.semi();
+
+
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
     }
 
     @Override
@@ -226,11 +253,11 @@ public class CodeGenVisitor implements ASTVisitor{
         else {
             sb.append(name);
             sb.equals();
-            sb.append(expr.getText());
+            expr.visit(this,sb);
             sb.semi();
         }
 
-        return ((CodeGenStringBuilder) arg).append(sb);
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
     }
 
     @Override
@@ -247,20 +274,17 @@ public class CodeGenVisitor implements ASTVisitor{
         Type type = nameDef.getType();
         String name = nameDef.getName();
 
-
-
-
         //TODO Need help on this
 
 
-        //sb.append
+        sb.append(String.valueOf(type));
         sb.append(name);
 
 
         //      if (unaryExpression.getCoerceTo() != type) {
         //        genTypeConversion(type, unaryExpression.getCoerceTo(), sb);
         //  }
-        return ((CodeGenStringBuilder) arg).append(sb);
+        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
     }
 
     @Override
@@ -295,7 +319,6 @@ public class CodeGenVisitor implements ASTVisitor{
     }
 
 
-}
 
 
 

@@ -1,5 +1,7 @@
 package edu.ufl.cise.plc;
 
+import edu.ufl.cise.plc.ast.Types;
+
 public class CodeGenStringBuilder {
     StringBuilder delegate;
     //methods reimplemented—just call the delegates method
@@ -7,10 +9,20 @@ public class CodeGenStringBuilder {
         delegate.append(s);
         return this;
     }
-
-
+    public CodeGenStringBuilder append(Types type){
+        delegate.append(type.toString());
+        return this;
+    }
     public CodeGenStringBuilder comma(){
         delegate.append(",");
+        return this;
+    }
+    public CodeGenStringBuilder question(){
+        delegate.append("?");
+        return this;
+    }
+    public CodeGenStringBuilder colon(){
+        delegate.append(":");
         return this;
     }
     public CodeGenStringBuilder stringQuotes(){
@@ -39,7 +51,7 @@ public class CodeGenStringBuilder {
     }
 
     public CodeGenStringBuilder newline() {
-        //TODO fix
+        //TODO check if right
         delegate.append("\n");
         return this;
     }
