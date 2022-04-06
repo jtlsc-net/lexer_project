@@ -60,6 +60,31 @@ public class TypeCheckVisitor implements ASTVisitor {
 			throw new TypeCheckException(message, node.getSourceLoc());
 		}
 	}
+	
+	// Function for assigning basic types, i.e. STRING_LIT -> STRING
+	// Returns true on success, false on fail.
+	private boolean setBasicType(Expr expr) {
+		Kind kind = expr.getFirstToken().getKind();
+		if(kind == Kind.STRING_LIT) {
+			expr.setType(STRING);
+			return true;
+		}
+		else if(kind == Kind.BOOLEAN_LIT) {
+			expr.setType(BOOLEAN);
+			return true;
+		}
+		else if(kind == Kind.FLOAT_LIT) {
+			expr.setType(FLOAT);
+			return true;
+		}
+		else if(kind == Kind.INT_LIT) {
+			expr.setType(INT);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 
 	//The type of a BooleanLitExpr is always BOOLEAN.
 	//Set the type in AST Node for later passes (code generation)
@@ -285,13 +310,15 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 		String name = identExpr.getText();
 		Declaration dec = symbolTable.lookup(name);
-		check(dec != null, identExpr, "undefined identifier " + name);
-
-		check(dec.isInitialized(), identExpr, "using uninitialized variable");
+		check(dec != null, identExpr, "undefined identifier " + name + " + " + identExpr);
+		
+		if(arg != "pixel") {
+			check(dec.isInitialized(), identExpr, "using uninitialized variable");
+		}
 		identExpr.setDec(dec);
 		Type type = dec.getType();
 		identExpr.setType(type);
-
+		//System.out.println(identExpr);
 		return type;
 	}
 
@@ -299,14 +326,28 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
 		//TODO  implement this method
 		Type condition = (Type) conditionalExpr.getCondition().visit(this, arg);
+		//conditionalExpr.getTrueCase().setType(Type.BOOLEAN);
+		Kind kindTrue = conditionalExpr.getTrueCase().getFirstToken().getKind();
+		Kind kindFalse = conditionalExpr.getFalseCase().getFirstToken().getKind();
+		
 		check(condition == BOOLEAN, conditionalExpr, "Type of condition must be boolean");
 
-		check(conditionalExpr.getTrueCase().getType() == conditionalExpr.getTrueCase().getType(), conditionalExpr,
+		check(kindTrue == kindFalse, conditionalExpr,
 				"Type of trueCase must be the same as the type of falseCase");
-		check(condition == conditionalExpr.getTrueCase().getType(), conditionalExpr,
-				"Type of trueCase must be the same as the type of falseCase");
+		if(!setBasicType(conditionalExpr.getTrueCase())) {
+			throw new TypeCheckException("Couldn't set types for conditional expressions: " + conditionalExpr.getTrueCase());
+		}
+		
+		if(!setBasicType(conditionalExpr.getFalseCase())) {
+			throw new TypeCheckException("Couldn't set types for conditional expressions: " + conditionalExpr.getFalseCase());
+		}
+		conditionalExpr.setType(conditionalExpr.getTrueCase().getType());
+//		check(condition == conditionalExpr.getTrueCase().getType(), conditionalExpr,
+//				"Type of trueCase must be the same as the type of falseCase");
 
-		return condition;
+		// Setting type to "return" type from if statement.
+		// If this is changed also change returnStatement code below.
+		return conditionalExpr.getType();
 
 	}
 
@@ -337,12 +378,15 @@ public class TypeCheckVisitor implements ASTVisitor {
 //TODO CHECK IF THE THING DOWN BELOW IS RIGHT
 
 		String name = assignmentStatement.getName();
+		//System.out.println(assignmentStatement);
 		Declaration declaration = symbolTable.lookup(name);
 		check(declaration != null, assignmentStatement, "undeclared variable " + name);
-		Type expressionType= (Type) assignmentStatement.getExpr().visit(this, arg);
+		//System.out.println(declaration.getType() + " + " + assignmentStatement.getSelector());
+		
 		declaration.setInitialized(true);
 
 		if(declaration.getType() != Type.IMAGE) {
+			Type expressionType= (Type) assignmentStatement.getExpr().visit(this, arg);
 			boolean flag = false;
 			if(declaration.getType() == INT && expressionType ==FLOAT){
 				assignmentStatement.getExpr().setCoerceTo(INT);
@@ -367,6 +411,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 
 		else if( declaration.getType() == IMAGE && assignmentStatement.getSelector() == null){
+			Type expressionType= (Type) assignmentStatement.getExpr().visit(this, arg);
 			boolean flag = false;
 			if(declaration.getType() == IMAGE && expressionType ==IMAGE){
 				flag = true;
@@ -389,27 +434,36 @@ public class TypeCheckVisitor implements ASTVisitor {
 			return expressionType;
 		}
 		else if(declaration.getType() == IMAGE && assignmentStatement.getSelector() != null){
-
+			
 			String pixel1 =  assignmentStatement.getSelector().getX().getText();
 			String pixel2 =  assignmentStatement.getSelector().getY().getText();
-
 			Declaration dec1 = symbolTable.lookup(pixel1);
 			Declaration dec2 = symbolTable.lookup(pixel2);
-
+			
 			check(dec1 == null, assignmentStatement, "Pixel 1 can't declared variable " + pixel1);
 			check(dec2 == null, assignmentStatement, "Pixel 2 can't declared variable  " + pixel2);
+			assignmentStatement.getSelector().getX().setType(INT);
+			assignmentStatement.getSelector().getY().setType(INT);
+			dec1 = new VarDeclaration(assignmentStatement.getSelector().getX().getFirstToken(), 
+					new NameDef(assignmentStatement.getSelector().getX().getFirstToken(), "int", "x"), null, null);
+			dec2 = new VarDeclaration(assignmentStatement.getSelector().getY().getFirstToken(), 
+					new NameDef(assignmentStatement.getSelector().getY().getFirstToken(), "int", "y"), null, null);
+			dec1.setInitialized(false);
+			dec2.setInitialized(false);
+			symbolTable.insert(pixel1, dec1);
+			symbolTable.insert(pixel2, dec2);
 			boolean flag = false;
+			Type expressionType= (Type) assignmentStatement.getExpr().visit(this, "pixel");
 			if( expressionType ==INT || expressionType == FLOAT|| expressionType == COLOR || expressionType == COLORFLOAT){
 				assignmentStatement.getExpr().setCoerceTo(COLOR);
 				flag = true;
 			}
-
+			
 			check(flag ==  true , assignmentStatement, "incompatible types in assignment");
 			symbolTable.remove(pixel1);
 			symbolTable.remove(pixel2);
 			return expressionType;
 		}
-
 
 		return null;
 
@@ -460,11 +514,37 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Expr initializer = declaration.getExpr();
 		if(initializer != null) {
 			Declaration rhs = symbolTable.lookup(initializer.getText());
-			initializer.setType(rhs.getType());
 			boolean flag = false;
-			if (rhs != null) {
+			if (rhs != null && rhs.getType() != null) {
+				initializer.setType(rhs.getType());
 				if(!rhs.isInitialized()) {
 					throw new TypeCheckException("Can't assign to variable that is not initialized.");
+				}
+				Type initializerType = initializer.getType();  // Get type of Expr on rhs of declaration.
+				if(declaration.getType() != initializerType  && declaration.getType() != Type.IMAGE) {
+					if(declaration.getType() == INT && initializerType ==FLOAT){
+						initializer.setCoerceTo(INT);
+						flag = true;
+					}
+					if(declaration.getType() == FLOAT && initializerType ==INT){
+						initializer.setCoerceTo(FLOAT);
+						flag = true;
+					}
+					if(declaration.getType() == INT && initializerType ==COLOR){
+						initializer.setCoerceTo(INT);
+						flag = true;
+					}
+					if(declaration.getType() == COLOR && initializerType ==INT){
+						initializer.setCoerceTo(COLOR);
+						flag = true;
+					}
+				}
+				check(assignmentCompatible(declaration.getType(), initializerType) || flag == true,declaration, 
+				"type of expression and declared type do not match");
+			}
+			else {
+				if(!setBasicType(initializer)) {
+					throw new TypeCheckException("Can't set nonbasic type in VarDeclaration: " + initializer.getType());
 				}
 				Type initializerType = initializer.getType();  // Get type of Expr on rhs of declaration.
 				if(declaration.getType() != initializerType  && declaration.getType() != Type.IMAGE) {
@@ -491,6 +571,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			declaration.setInitialized(true);
 			return null;
 		}
+		
 		return null;
 	}
 
@@ -549,6 +630,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
 		Type returnType = root.getReturnType();  //This is why we save program in visitProgram.
 		Type expressionType = (Type) returnStatement.getExpr().visit(this, arg);
+		//System.out.println(returnType + " + " + expressionType);
 		check(returnType == expressionType, returnStatement, "return statement with invalid type");
 		return null;
 	}
