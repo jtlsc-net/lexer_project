@@ -30,7 +30,9 @@ import edu.ufl.cise.plc.ast.UnaryExprPostfix;
 import edu.ufl.cise.plc.ast.VarDeclaration;
 import edu.ufl.cise.plc.ast.WriteStatement;
 import edu.ufl.cise.plc.CodeGenStringBuilder;
+import edu.ufl.cise.plc.runtime.ConsoleIO;
 
+import java.io.PrintStream;
 import java.util.List;
 
 public class CodeGenVisitor implements ASTVisitor{
@@ -168,10 +170,8 @@ public class CodeGenVisitor implements ASTVisitor{
         binaryExpr.getRight().visit(this, sb);
         sb.rparen();
         //}
-        if (binaryExpr.getCoerceTo() != type) {
-            genTypeConversion(type, binaryExpr.getCoerceTo(), sb);
-        }
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+
+        return sb;
     }
 
     @Override
@@ -199,11 +199,11 @@ public class CodeGenVisitor implements ASTVisitor{
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
 
-        String name = conditionalExpr.getCondition().getText();
+
         Expr trueExpr= conditionalExpr.getTrueCase();
         Expr falseExpr= conditionalExpr.getFalseCase();
         sb.lparen();
-        sb.append(name);
+        conditionalExpr.getCondition().visit(this,sb);
         sb.rparen();
         sb.question();
         trueExpr.visit(this,sb);
@@ -243,6 +243,12 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+
+        //   PrintStream stream = ConsoleIO.console.println();
+        //  ConsoleIO.console.println(<source>) ;
+
+        writeStatement.getSource().visit(this,sb);
 
         return null;
     }
@@ -272,6 +278,10 @@ public class CodeGenVisitor implements ASTVisitor{
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
 
 
+
+
+        sb.append(program.getName());
+
         visitParams(program.getParams(), arg);
 
 
@@ -299,9 +309,6 @@ public class CodeGenVisitor implements ASTVisitor{
         sb.append(name);
 
 
-        //      if (unaryExpression.getCoerceTo() != type) {
-        //        genTypeConversion(type, unaryExpression.getCoerceTo(), sb);
-        //  }
         return sb;
     }
 
@@ -355,10 +362,7 @@ public class CodeGenVisitor implements ASTVisitor{
     }
 
 
-    public void genTypeConversion(Type type, Type coerceTo, CodeGenStringBuilder sb) {
-        type =
 
-    }
 
 
 
