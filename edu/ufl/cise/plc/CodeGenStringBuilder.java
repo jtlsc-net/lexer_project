@@ -47,6 +47,7 @@ public class CodeGenStringBuilder {
 
     public CodeGenStringBuilder semi() {
         delegate.append(";");
+        newline();
         return this;
     }
 

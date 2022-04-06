@@ -31,6 +31,8 @@ import edu.ufl.cise.plc.ast.VarDeclaration;
 import edu.ufl.cise.plc.ast.WriteStatement;
 import edu.ufl.cise.plc.CodeGenStringBuilder;
 
+import java.util.List;
+
 public class CodeGenVisitor implements ASTVisitor{
     public CodeGenVisitor(String packageName ){
 
@@ -45,7 +47,7 @@ public class CodeGenVisitor implements ASTVisitor{
 
         sb.append(booleanLitExpr.getText());
 
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        return sb;
 
     }
 
@@ -60,7 +62,7 @@ public class CodeGenVisitor implements ASTVisitor{
         sb.stringQuotes();
 
 
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        return sb;
     }
 
     @Override
@@ -105,7 +107,12 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitConsoleExpr(ConsoleExpr consoleExpr, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+
+        sb.lparen();
+        consoleExpr.getCoerceTo().toString();
+
+
     }
 
     @Override
@@ -123,8 +130,6 @@ public class CodeGenVisitor implements ASTVisitor{
         Expr expr = unaryExpression.getExpr();
 
 
-        Kind op = unaryExpression.getOp().getKind();
-        Type exprType = expr.getCoerceTo() != null ? expr.getCoerceTo() : expr.getType();
 
         //TODO check if binary expr is in assignment 5
         if (type == Type.IMAGE || type == Type.COLOR || type == Type.COLORFLOAT)
@@ -145,11 +150,11 @@ public class CodeGenVisitor implements ASTVisitor{
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         Type type = binaryExpr.getType();
-        Expr leftExpr = binaryExpr.getLeft();
-        Expr rightExpr = binaryExpr.getRight();
-        Type leftType = leftExpr.getCoerceTo() != null ? leftExpr.getCoerceTo() : leftExpr.getType();
-        Type rightType = rightExpr.getCoerceTo() != null ? rightExpr.getCoerceTo() : rightExpr.getType();
-        Kind op = binaryExpr.getOp().getKind();
+        //      Expr leftExpr = binaryExpr.getLeft();
+        //       Expr rightExpr = binaryExpr.getRight();
+//        Type leftType = leftExpr.getCoerceTo() != null ? leftExpr.getCoerceTo() : leftExpr.getType();
+        //      Type rightType = rightExpr.getCoerceTo() != null ? rightExpr.getCoerceTo() : rightExpr.getType();
+        //      Kind op = binaryExpr.getOp().getKind();
 
         //TODO check if binary expr is in assignment 5
         // if (not handled in assignment 5)
@@ -205,7 +210,7 @@ public class CodeGenVisitor implements ASTVisitor{
         sb.colon();
         falseExpr.visit(this,sb);
 
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        return sb;
     }
 
     @Override
@@ -231,13 +236,14 @@ public class CodeGenVisitor implements ASTVisitor{
         expr.visit(this,sb);
         sb.append(expr.getText());
         sb.semi();
+        sb.newline();
 
-
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        return sb;
     }
 
     @Override
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
+
         return null;
     }
 
@@ -257,13 +263,25 @@ public class CodeGenVisitor implements ASTVisitor{
             sb.semi();
         }
 
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        return sb;
     }
 
     @Override
     public Object visitProgram(Program program, Object arg) throws Exception {
-        return null;
+        //TODO
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+
+
+        visitParams(program.getParams(), arg);
+
+
     }
+    //public Object visitParams(List<NameDef> namedef, Object arg) throws Exception {
+
+    //}
+    //public Object visitImport(Program program, Object arg) throws Exception {
+
+    //}
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
@@ -284,7 +302,7 @@ public class CodeGenVisitor implements ASTVisitor{
         //      if (unaryExpression.getCoerceTo() != type) {
         //        genTypeConversion(type, unaryExpression.getCoerceTo(), sb);
         //  }
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        return sb;
     }
 
     @Override
@@ -304,7 +322,31 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        if(declaration.getType() != Type.CONSOLE){
+            throw new UnsupportedOperationException("Not implemented");
+        }
+        Kind op = declaration.getOp().getKind()
+        if(op == Kind.ASSIGN || op==Kind.LARROW){
+            declaration.getNameDef().visit(this,sb);
+            sb.equals();
+            declaration.getExpr().visit(this, sb);
+
+
+        }
+        else{
+            declaration.getNameDef().visit(this,sb);
+            sb.semi();
+        }
+
+
+
+
+        sb.newline();
+
+        return sb;
+
+
     }
 
     @Override
@@ -314,7 +356,7 @@ public class CodeGenVisitor implements ASTVisitor{
 
 
     public void genTypeConversion(Type type, Type coerceTo, CodeGenStringBuilder sb) {
-
+        type =
 
     }
 
