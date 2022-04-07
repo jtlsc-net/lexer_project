@@ -20,7 +20,7 @@ public class CodeGenStringBuilder {
         return this;
     }
     public CodeGenStringBuilder comma(){
-        delegate.append("{");
+        delegate.append(",");
         return this;
     }
     public CodeGenStringBuilder LCurl(){
@@ -40,7 +40,8 @@ public class CodeGenStringBuilder {
         return this;
     }
     public CodeGenStringBuilder stringQuotes(){
-        delegate.append("\"\"\"");
+        //delegate.append("\"\"\"");
+    	delegate.append("\"");
         return this;
     }
 
@@ -72,5 +73,9 @@ public class CodeGenStringBuilder {
         //TODO check if right
         delegate.append("\n");
         return this;
+    }
+    public CodeGenStringBuilder space() {
+    	delegate.append(" ");
+    	return this;
     }
 }

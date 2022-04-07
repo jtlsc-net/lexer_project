@@ -37,15 +37,14 @@ import java.io.PrintStream;
 import java.util.List;
 
 public class CodeGenVisitor implements ASTVisitor{
+	String packageName;
     public CodeGenVisitor(String packageName ){
-
-
-
+    	this.packageName = packageName;
     }
 
     @Override
     public Object visitBooleanLitExpr(BooleanLitExpr booleanLitExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+    	CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         boolean bool = booleanLitExpr.getValue();
 
         sb.append(booleanLitExpr.getText());
@@ -56,7 +55,7 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Type type = stringLitExpr.getType();
 
         //TODO check if append is right
@@ -77,7 +76,7 @@ public class CodeGenVisitor implements ASTVisitor{
         int intValue = intLitExpr.getValue();
 
         //TODO check if right
-        sb.append(String.valueOf(intValue));
+        
 
         if (intLitExpr.getCoerceTo() != type && intLitExpr.getCoerceTo() != null)  {
 
@@ -85,13 +84,14 @@ public class CodeGenVisitor implements ASTVisitor{
 
         }
         //return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        sb.append(String.valueOf(intValue));
         return sb;
 
     }
 
     @Override
     public Object visitFloatLitExpr(FloatLitExpr floatLitExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Type type = floatLitExpr.getType();
         float floatValue = floatLitExpr.getValue();
 
@@ -103,12 +103,14 @@ public class CodeGenVisitor implements ASTVisitor{
         if (floatLitExpr.getCoerceTo() != Type.FLOAT && floatLitExpr.getCoerceTo() != null) {
             genTypeConversion(type, floatLitExpr.getCoerceTo(), sb);
         }
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        return sb;
+        //return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
     }
 
     @Override
     public Object visitColorConstExpr(ColorConstExpr colorConstExpr, Object arg) throws Exception {
-        return null;
+    	throw new UnsupportedOperationException("ColorConstExpr not yet implemented.");
+        //return null;
     }
 
     @Override
@@ -154,7 +156,8 @@ public class CodeGenVisitor implements ASTVisitor{
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        //CodeGenStringBuilder sb = new CodeGenStringBuilder();
+    	CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Type type = binaryExpr.getType();
         //      Expr leftExpr = binaryExpr.getLeft();
         //       Expr rightExpr = binaryExpr.getRight();
@@ -180,7 +183,7 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Type type = identExpr.getType();
         String text = identExpr.getText();
 
@@ -194,7 +197,8 @@ public class CodeGenVisitor implements ASTVisitor{
         }
 
 
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        //return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        return sb;
 
     }
 
@@ -219,17 +223,19 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitDimension(Dimension dimension, Object arg) throws Exception {
-        return null;
+    	throw new UnsupportedOperationException("Dimension not yet implemented.");
+        //return null;
     }
 
     @Override
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
-        return null;
+    	throw new UnsupportedOperationException("PixelSelector not yet implemented.");
+        //return null;
     }
 
     @Override
     public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 
         String name = assignmentStatement.getName();
         Expr expr = assignmentStatement.getExpr();
@@ -238,7 +244,7 @@ public class CodeGenVisitor implements ASTVisitor{
         sb.append(name);
         sb.equals();
         expr.visit(this,sb);
-        sb.append(expr.getText());
+//        sb.append(expr.getText());
         sb.semi();
         sb.newline();
 
@@ -280,25 +286,29 @@ public class CodeGenVisitor implements ASTVisitor{
     public Object visitProgram(Program program, Object arg) throws Exception {
 
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
-        //TODO add imports and packages
+        //TODO add imports
         List<NameDef> namedef = program.getParams();
         List<ASTNode> decAndStatement = program.getDecsAndStatements();
-
+        sb.append("package " + packageName + ";").newline();
         sb.append("public class ");
         sb.append(program.getName());
         sb.LCurl().newline();
         sb.append("\tpublic static ");
-        sb.append(program.getReturnType().toString().toLowerCase());
-        sb.append(" apply( ");
+        if(program.getReturnType() == Type.STRING) {
+        	sb.append("String");
+        }
+        else {
+        	sb.append(program.getReturnType().toString().toLowerCase());
+        }
+        sb.append(" apply(");
 
 
 
         if(namedef.size()> 1 ) {
             namedef.get(0).visit(this, sb);
             for (int x = 1; x < namedef.size(); x++) {
-                sb.comma();
+                sb.comma().space();
                 namedef.get(x).visit(this, sb);
-
             }
         }
         else {
@@ -307,14 +317,14 @@ public class CodeGenVisitor implements ASTVisitor{
             }
 
         }
-        sb.rparen().LCurl().newline().tab().tab();
+        sb.rparen().LCurl().newline();
         for (int x = 0; x < decAndStatement.size(); x++){
+        	sb.tab().tab();
             decAndStatement.get(x).visit(this,sb);
             sb.newline();
 
         }
         sb.tab().RCurl().newline().RCurl();
-        System.out.println(sb.getString());
 
 
 
@@ -332,23 +342,27 @@ public class CodeGenVisitor implements ASTVisitor{
 
 
 
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Type type = nameDef.getType();
         String name = nameDef.getName();
 
         //TODO Need help on this
-
-
-        sb.append(String.valueOf(type));
+        System.out.println(name);
+        if(type == Type.STRING) {
+        	sb.append("String").space();
+        }
+        else {
+        	sb.append(String.valueOf(type).toLowerCase()).space();
+        }
         sb.append(name);
-
 
         return sb;
     }
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        return null;
+    	throw new UnsupportedOperationException("NameDefWithDim not yet implemented.");
+        //return null;
     }
 
     @Override
@@ -357,33 +371,32 @@ public class CodeGenVisitor implements ASTVisitor{
         Expr expr = returnStatement.getExpr();
         sb.append("return ");
         expr.visit(this, sb);
-        sb.semi().newline();
+        sb.semi();
         return sb;
     }
 
     @Override
     public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-        if(declaration.getType() != Type.CONSOLE){
-            throw new UnsupportedOperationException("Not implemented");
-        }
-        Kind op = declaration.getOp().getKind();
-        if(op == Kind.ASSIGN || op==Kind.LARROW){
-            declaration.getNameDef().visit(this,sb);
-            sb.equals();
-            declaration.getExpr().visit(this, sb);
-
-
-        }
-        else{
-            declaration.getNameDef().visit(this,sb);
+        IToken opExpr = declaration.getOp();
+        if(declaration.getOp() == null) {
+        	declaration.getNameDef().visit(this,sb);
             sb.semi();
         }
+        else {
+        	Kind op = declaration.getOp().getKind();
+            if(op == Kind.ASSIGN || op==Kind.LARROW){
+                declaration.getNameDef().visit(this,sb);
+//                sb.equals();
+                sb.append(opExpr.getText());
+                declaration.getExpr().visit(this, sb);
+                sb.semi();
+            }
+        }
 
 
 
 
-        sb.newline();
 
         return sb;
 
@@ -392,7 +405,8 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
-        return null;
+    	throw new UnsupportedOperationException("UnaryExprPostfix not yet implemented.");
+        //return null;
     }
     
     public void genTypeConversion(Type type, Type coerceTo, CodeGenStringBuilder sb) {
