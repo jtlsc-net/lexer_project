@@ -70,7 +70,7 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitIntLitExpr(IntLitExpr intLitExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Type type = intLitExpr.getType();
 
 
@@ -84,7 +84,8 @@ public class CodeGenVisitor implements ASTVisitor{
             genTypeConversion(type, intLitExpr.getCoerceTo(), sb);
 
         }
-        return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        //return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
+        return sb;
 
     }
 
@@ -117,7 +118,7 @@ public class CodeGenVisitor implements ASTVisitor{
         sb.lparen();
         consoleExpr.getCoerceTo().toString();
 
-
+        return sb;
     }
 
     @Override
@@ -283,14 +284,12 @@ public class CodeGenVisitor implements ASTVisitor{
         List<NameDef> namedef = program.getParams();
         List<ASTNode> decAndStatement = program.getDecsAndStatements();
 
-
         sb.append("public class ");
         sb.append(program.getName());
         sb.LCurl().newline();
         sb.append("\tpublic static ");
-        sb.append(program.getReturnType().toString());
+        sb.append(program.getReturnType().toString().toLowerCase());
         sb.append(" apply( ");
-
 
 
 
@@ -309,17 +308,17 @@ public class CodeGenVisitor implements ASTVisitor{
 
         }
         sb.rparen().LCurl().newline().tab().tab();
-
         for (int x = 0; x < decAndStatement.size(); x++){
             decAndStatement.get(x).visit(this,sb);
             sb.newline();
 
         }
         sb.tab().RCurl().newline().RCurl();
+        System.out.println(sb.getString());
 
 
 
-        return sb;
+        return sb.getString();
     }
     //public Object visitParams(List<NameDef> namedef, Object arg) throws Exception {
 
@@ -368,7 +367,7 @@ public class CodeGenVisitor implements ASTVisitor{
         if(declaration.getType() != Type.CONSOLE){
             throw new UnsupportedOperationException("Not implemented");
         }
-        Kind op = declaration.getOp().getKind()
+        Kind op = declaration.getOp().getKind();
         if(op == Kind.ASSIGN || op==Kind.LARROW){
             declaration.getNameDef().visit(this,sb);
             sb.equals();
@@ -394,6 +393,11 @@ public class CodeGenVisitor implements ASTVisitor{
     @Override
     public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
         return null;
+    }
+    
+    public void genTypeConversion(Type type, Type coerceTo, CodeGenStringBuilder sb) {
+
+
     }
 
 

@@ -5,6 +5,12 @@ import edu.ufl.cise.plc.ast.Types;
 public class CodeGenStringBuilder {
     StringBuilder delegate;
     //methods reimplemented—just call the delegates method
+    public CodeGenStringBuilder() {
+    	delegate = new StringBuilder();
+    }
+    public String getString() {
+    	return delegate.toString();
+    }
     public CodeGenStringBuilder append(String s){
         delegate.append(s);
         return this;
