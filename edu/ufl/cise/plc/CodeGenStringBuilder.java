@@ -14,7 +14,15 @@ public class CodeGenStringBuilder {
         return this;
     }
     public CodeGenStringBuilder comma(){
-        delegate.append(",");
+        delegate.append("{");
+        return this;
+    }
+    public CodeGenStringBuilder LCurl(){
+        delegate.append("{");
+        return this;
+    }
+    public CodeGenStringBuilder RCurl(){
+        delegate.append("}");
         return this;
     }
     public CodeGenStringBuilder question(){
@@ -44,10 +52,13 @@ public class CodeGenStringBuilder {
         delegate.append("=");
         return this;
     }
+    public CodeGenStringBuilder tab() {
+        delegate.append("\t");
+        return this;
+    }
 
     public CodeGenStringBuilder semi() {
         delegate.append(";");
-        newline();
         return this;
     }
 

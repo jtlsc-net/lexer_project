@@ -32,6 +32,7 @@ import edu.ufl.cise.plc.ast.WriteStatement;
 import edu.ufl.cise.plc.CodeGenStringBuilder;
 import edu.ufl.cise.plc.runtime.ConsoleIO;
 
+import javax.naming.Name;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -79,7 +80,9 @@ public class CodeGenVisitor implements ASTVisitor{
         sb.append(String.valueOf(intValue));
 
         if (intLitExpr.getCoerceTo() != type && intLitExpr.getCoerceTo() != null)  {
+
             genTypeConversion(type, intLitExpr.getCoerceTo(), sb);
+
         }
         return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
 
@@ -244,12 +247,12 @@ public class CodeGenVisitor implements ASTVisitor{
     @Override
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
-
+        //TODO maybe need fix to have printstream
         //   PrintStream stream = ConsoleIO.console.println();
         //  ConsoleIO.console.println(<source>) ;
-
+        sb.append("ConsoleIO.console.println(");
         writeStatement.getSource().visit(this,sb);
-
+        sb.rparen().semi().newline();
         return null;
     }
 
@@ -266,7 +269,7 @@ public class CodeGenVisitor implements ASTVisitor{
             sb.append(name);
             sb.equals();
             expr.visit(this,sb);
-            sb.semi();
+            sb.semi().newline();
         }
 
         return sb;
@@ -274,17 +277,49 @@ public class CodeGenVisitor implements ASTVisitor{
 
     @Override
     public Object visitProgram(Program program, Object arg) throws Exception {
-        //TODO
+
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        //TODO add imports and packages
+        List<NameDef> namedef = program.getParams();
+        List<ASTNode> decAndStatement = program.getDecsAndStatements();
 
 
-
-
+        sb.append("public class ");
         sb.append(program.getName());
+        sb.LCurl().newline();
+        sb.append("\tpublic static ");
+        sb.append(program.getReturnType().toString());
+        sb.append(" apply( ");
 
-        visitParams(program.getParams(), arg);
 
 
+
+        if(namedef.size()> 1 ) {
+            namedef.get(0).visit(this, sb);
+            for (int x = 1; x < namedef.size(); x++) {
+                sb.comma();
+                namedef.get(x).visit(this, sb);
+
+            }
+        }
+        else {
+            for (int x = 0; x < namedef.size(); x++){
+                namedef.get(x).visit(this, sb);
+            }
+
+        }
+        sb.rparen().LCurl().newline().tab().tab();
+
+        for (int x = 0; x < decAndStatement.size(); x++){
+            decAndStatement.get(x).visit(this,sb);
+            sb.newline();
+
+        }
+        sb.tab().RCurl().newline().RCurl();
+
+
+
+        return sb;
     }
     //public Object visitParams(List<NameDef> namedef, Object arg) throws Exception {
 
