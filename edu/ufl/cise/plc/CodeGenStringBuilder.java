@@ -40,8 +40,7 @@ public class CodeGenStringBuilder {
         return this;
     }
     public CodeGenStringBuilder stringQuotes(){
-        //delegate.append("\"\"\"");
-    	delegate.append("\"");
+        delegate.append("\"\"\"");
         return this;
     }
 
@@ -76,6 +75,10 @@ public class CodeGenStringBuilder {
     }
     public CodeGenStringBuilder space() {
     	delegate.append(" ");
+    	return this;
+    }
+    public CodeGenStringBuilder insert(int offset, String str) {
+    	delegate.insert(offset, str);
     	return this;
     }
 }
