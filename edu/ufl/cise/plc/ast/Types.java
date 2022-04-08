@@ -35,6 +35,20 @@ public class Types {
 		};
 	}
 	
+	public static String toString(Type s) {
+		return switch(s) {
+		case BOOLEAN -> "boolean";
+		case COLOR -> "color";
+		case CONSOLE -> "console";
+		case FLOAT -> "float";
+		case IMAGE -> "image";
+		case INT -> "int";
+		case STRING -> "String";
+		case VOID -> "void";
+		default -> throw new IllegalArgumentException("Unexpected type: " + s);
+		};
+	}
+	
 
 
 }
