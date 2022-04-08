@@ -83,10 +83,14 @@ public class CodeGenVisitor implements ASTVisitor {
 		if (intLitExpr.getCoerceTo() != type && intLitExpr.getCoerceTo() != null) {
 
 			genTypeConversion(type, intLitExpr.getCoerceTo(), sb);
-
+			sb.append(String.valueOf(intValue));
+			sb.append(")");
+		}
+		else {
+			sb.append(String.valueOf(intValue));
 		}
 		// return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
-		sb.append(String.valueOf(intValue));
+		
 		return sb;
 
 	}
@@ -96,13 +100,20 @@ public class CodeGenVisitor implements ASTVisitor {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		Type type = floatLitExpr.getType();
 		float floatValue = floatLitExpr.getValue();
-
-		sb.append(floatLitExpr.getText());
-		sb.append("f");
-
+		
 		if (floatLitExpr.getCoerceTo() != Type.FLOAT && floatLitExpr.getCoerceTo() != null) {
 			genTypeConversion(type, floatLitExpr.getCoerceTo(), sb);
+			sb.append(floatLitExpr.getText());
+			sb.append("f");
+			sb.append(")");
 		}
+		else {
+			sb.append(floatLitExpr.getText());
+			sb.append("f");
+		}
+		
+
+		
 		return sb;
 		// return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
 	}
@@ -136,7 +147,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitUnaryExpr(UnaryExpr unaryExpression, Object arg) throws Exception {
-
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		Type type = unaryExpression.getType();
 		Expr expr = unaryExpression.getExpr();
@@ -151,9 +161,9 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.rparen();
 
 		}
-		if (unaryExpression.getCoerceTo() != type) {
-			genTypeConversion(type, unaryExpression.getCoerceTo(), sb);
-		}
+//		if (unaryExpression.getCoerceTo() != type) {
+//			genTypeConversion(type, unaryExpression.getCoerceTo(), sb);
+//		}
 		return sb;
 	}
 
@@ -173,11 +183,29 @@ public class CodeGenVisitor implements ASTVisitor {
 		// throw new UnsupportedOperationException("Not implemented");
 		// else {
 		sb.lparen();
-
-		binaryExpr.getLeft().visit(this, sb);
-
-		sb.append(binaryExpr.getOp().getText());
-		binaryExpr.getRight().visit(this, sb);
+		if(binaryExpr.getLeft().getType() == Type.STRING && binaryExpr.getOp().getKind() == Kind.EQUALS) {
+			binaryExpr.getLeft().visit(this, sb);
+			sb.append(".equals(");
+			binaryExpr.getRight().visit(this, sb);
+			sb.rparen();
+		}
+		else if(binaryExpr.getLeft().getType() == Type.STRING && binaryExpr.getOp().getKind() == Kind.NOT_EQUALS) {
+			sb.append("!");
+			binaryExpr.getLeft().visit(this, sb);
+			sb.append(".equals(");
+			binaryExpr.getRight().visit(this, sb);
+			sb.rparen();
+		}
+		else {
+			sb.lparen();
+			binaryExpr.getLeft().visit(this, sb);
+			sb.rparen();
+	
+			sb.append(binaryExpr.getOp().getText());
+			sb.lparen();
+			binaryExpr.getRight().visit(this, sb);
+			sb.rparen();
+		}
 		sb.rparen();
 		// }
 
@@ -192,10 +220,15 @@ public class CodeGenVisitor implements ASTVisitor {
 
 		// TODO might be wrong visit/also check if it needed
 		// identExpr.visit(this, sb);
-		sb.append(text);
+		
 
 		if (identExpr.getCoerceTo() != type && identExpr.getCoerceTo() != null) {
 			genTypeConversion(type, identExpr.getCoerceTo(), sb);
+			sb.append(text);
+			sb.append(")");
+		}
+		else {
+			sb.append(text);
 		}
 
 		// return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
@@ -206,7 +239,7 @@ public class CodeGenVisitor implements ASTVisitor {
 	@Override
 	// ( <condition> ) ? <trueCase> : <falseCase>
 	public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
-		CodeGenStringBuilder sb = new CodeGenStringBuilder();
+		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 
 		Expr trueExpr = conditionalExpr.getTrueCase();
 		Expr falseExpr = conditionalExpr.getFalseCase();
@@ -242,8 +275,17 @@ public class CodeGenVisitor implements ASTVisitor {
 
 		sb.append(name);
 		sb.equals();
-		expr.visit(this, sb);
-//        sb.append(expr.getText());
+		if (expr.getCoerceTo() != expr.getType() && expr.getCoerceTo() != null) {
+//			if(declaration.getExpr().)
+			genTypeConversionNoParen(expr.getType(), expr.getCoerceTo(), sb);
+			sb.lparen();
+			expr.visit(this, sb);
+			sb.rparen();
+		}
+		else {
+			expr.visit(this, sb);
+//	        sb.append(expr.getText());
+		}
 		sb.semi();
 		sb.newline();
 
@@ -377,7 +419,16 @@ public class CodeGenVisitor implements ASTVisitor {
 				declaration.getNameDef().visit(this, sb);
 //                sb.equals();
 				sb.append(opExpr.getText());
-				declaration.getExpr().visit(this, sb);
+				if (declaration.getExpr().getCoerceTo() != declaration.getExpr().getType() && declaration.getExpr().getCoerceTo() != null) {
+//					if(declaration.getExpr().)
+					genTypeConversionNoParen(declaration.getType(), declaration.getExpr().getCoerceTo(), sb);
+					sb.lparen();
+					declaration.getExpr().visit(this, sb);
+					sb.rparen();
+				}
+				else {
+					declaration.getExpr().visit(this, sb);
+				}
 				sb.semi();
 			}
 //            else if(op == Kind.LARROW) {
@@ -402,8 +453,13 @@ public class CodeGenVisitor implements ASTVisitor {
 	}
 
 	public void genTypeConversion(Type type, Type coerceTo, CodeGenStringBuilder sb) {
-
+		sb.append("((" + Types.toString(coerceTo) + ")");
 	}
+	
+	public void genTypeConversionNoParen(Type type, Type coerceTo, CodeGenStringBuilder sb) {
+		sb.append("(" + Types.toString(coerceTo) + ")");
+	}
+	
 
 	// Function to turn primitives to wrapper types (i.e. int -> Integer)
 	private String primitiveToWrapper(String primitive) {
