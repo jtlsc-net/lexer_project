@@ -7,8 +7,8 @@
 
 package edu.ufl.cise.plc.runtime.javaCompilerClassLoader;
 
-import javax.tools.SimpleJavaFileObject;
 import java.net.URI;
+import javax.tools.SimpleJavaFileObject;
 
 
 public class StringJavaFileObject extends SimpleJavaFileObject {

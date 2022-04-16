@@ -1,10 +1,11 @@
 package edu.ufl.cise.plc.runtime.javaCompilerClassLoader;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DynamicCompiler {
 	

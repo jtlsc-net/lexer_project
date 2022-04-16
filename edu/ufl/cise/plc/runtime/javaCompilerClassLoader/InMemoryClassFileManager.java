@@ -2,13 +2,14 @@ package edu.ufl.cise.plc.runtime.javaCompilerClassLoader;
 
 /*  Class required for implementation of DynamicCompiler */
 
+import java.io.IOException;
+import java.security.SecureClassLoader;
+
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardJavaFileManager;
-import java.io.IOException;
-import java.security.SecureClassLoader;
 
 public class InMemoryClassFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
 	
