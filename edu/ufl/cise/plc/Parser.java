@@ -268,11 +268,11 @@ public class Parser implements IParser {
             if(isKind(IToken.Kind.PLUS)) {
                 consume(IToken.Kind.PLUS,"");    //what to put in message?
             }
-            else{//else if or else
+            else if (isKind(Token.Kind.MINUS)){//else if or else
                 consume(IToken.Kind.MINUS,"");
             }
             right= MultiplicativeExpr();
-            left = new BinaryExpr(firstToken,left,op,right);
+;            left = new BinaryExpr(firstToken,left,op,right);
         }
         return left;
     }

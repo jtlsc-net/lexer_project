@@ -483,7 +483,6 @@ public class TypeCheckVisitor implements ASTVisitor {
 		//TODO: A read statement cannot have a PixelSelector
 		//The right hand side type must be CONSOLE or STRING
 		//Mark target variable as initialized.
-
 		String name = readStatement.getName();
 		Declaration declaration = symbolTable.lookup(name);
 		check(declaration != null, readStatement, "undeclared variable " + name);
@@ -517,7 +516,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			initializer.visit(this, arg);
 			Declaration rhs = symbolTable.lookup(initializer.getText());
 			boolean flag = false;
-			if (rhs != null && rhs.getType() != null) {
+			if (rhs != null && rhs.getType() != null && declaration.getOp().getKind() != Kind.LARROW) {
 				initializer.setType(rhs.getType());
 				if(!rhs.isInitialized()) {
 					throw new TypeCheckException("Can't assign to variable that is not initialized.");
@@ -548,9 +547,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 				if(initializer.getType() != CONSOLE && initializer.getType() != STRING) {
 					throw new TypeCheckException("Need console or string on RHS of read declaration " + initializer.getType());
 				}
-				if(declaration.getDim() != null) {
-					throw new TypeCheckException("Can't have PixelSelector in read declaration " + declaration);
-				}
+//				if(declaration.getDim() != null) {
+//					throw new TypeCheckException("Can't have PixelSelector in read declaration " + declaration);
+//				}
 				if(initializer.getType() == CONSOLE) {
 					initializer.setCoerceTo(declaration.getType());
 				}

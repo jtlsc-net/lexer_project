@@ -256,8 +256,14 @@ public class CodeGenVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitDimension(Dimension dimension, Object arg) throws Exception {
-		throw new UnsupportedOperationException("Dimension not yet implemented.");
-		// return null;
+		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+		
+		dimension.getWidth().visit(this, sb);
+		sb.comma().space();
+		dimension.getHeight().visit(this, sb);
+		
+		return sb;
+		//throw new UnsupportedOperationException("Dimension not yet implemented.");
 	}
 
 	@Override
@@ -361,7 +367,9 @@ public class CodeGenVisitor implements ASTVisitor {
 				sb.insert(0, "import " + imports.get(x) + ";\n");
 			}
 		}
-		sb.insert(0, "package " + packageName + ";\n");
+		if(packageName != null && packageName != "") {
+			sb.insert(0, "package " + packageName + ";\n");
+		}
 		return sb.getString();
 	}
 	// public Object visitParams(List<NameDef> namedef, Object arg) throws Exception
@@ -379,7 +387,6 @@ public class CodeGenVisitor implements ASTVisitor {
 		Type type = nameDef.getType();
 		String name = nameDef.getName();
 
-		// TODO Need help on this
 		if (type == Type.STRING) {
 			sb.append("String").space();
 		} else {
@@ -392,8 +399,23 @@ public class CodeGenVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-		throw new UnsupportedOperationException("NameDefWithDim not yet implemented.");
-		// return null;
+		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+		Type type = nameDefWithDim.getType();
+		String name = nameDefWithDim.getName();
+		
+		if(type == Type.IMAGE) {
+			sb.append("BufferedImage ");
+		}
+		else {
+			if (type == Type.STRING) {
+				sb.append("String").space();
+			} else {
+				sb.append(String.valueOf(type).toLowerCase()).space();
+			}
+		}
+		sb.append(name).space();
+		
+		return sb;
 	}
 
 	@Override
@@ -412,22 +434,47 @@ public class CodeGenVisitor implements ASTVisitor {
 		IToken opExpr = declaration.getOp();
 		if (declaration.getOp() == null) {
 			declaration.getNameDef().visit(this, sb);
+			if(declaration.getNameDef().getType() == Type.IMAGE) {
+				imports.add("java.awt.image.BufferedImage");
+				sb.equals().space();
+				sb.append("new BufferedImage(");
+				declaration.getDim().visit(this, sb);
+				sb.append(", BufferedImage.TYPE_INT_RGB)");
+			}
 			sb.semi();
 		} else {
 			Kind op = declaration.getOp().getKind();
 			if (op == Kind.ASSIGN || op == Kind.LARROW) {
 				declaration.getNameDef().visit(this, sb);
-//                sb.equals();
-				sb.append(opExpr.getText());
-				if (declaration.getExpr().getCoerceTo() != declaration.getExpr().getType() && declaration.getExpr().getCoerceTo() != null) {
-//					if(declaration.getExpr().)
-					genTypeConversionNoParen(declaration.getType(), declaration.getExpr().getCoerceTo(), sb);
-					sb.lparen();
-					declaration.getExpr().visit(this, sb);
-					sb.rparen();
+                sb.equals();
+				//sb.append(opExpr.getText());
+				if (declaration.getNameDef().getType() == Type.IMAGE) {
+					imports.add("java.awt.image.BufferedImage");
+					imports.add("edu.ufl.cise.plc.runtime.FileURLIO");
+					sb.space();
+					if(declaration.getDim() == null) {
+						throw new UnsupportedOperationException("image without dimension not yet implemented.");
+					}
+					else {
+						sb.append("FileURLIO.readImage(");
+						declaration.getExpr().visit(this, sb);
+						sb.comma().space();
+						declaration.getDim().visit(this, sb);
+						sb.rparen().semi().newline();
+					}
+					sb.tab().tab().append("FileURLIO.closeFiles()");
 				}
 				else {
-					declaration.getExpr().visit(this, sb);
+					if (declaration.getExpr().getCoerceTo() != declaration.getExpr().getType() && declaration.getExpr().getCoerceTo() != null) {
+	//					if(declaration.getExpr().)
+						genTypeConversionNoParen(declaration.getType(), declaration.getExpr().getCoerceTo(), sb);
+						sb.lparen();
+						declaration.getExpr().visit(this, sb);
+						sb.rparen();
+					}
+					else {
+						declaration.getExpr().visit(this, sb);
+					}
 				}
 				sb.semi();
 			}
