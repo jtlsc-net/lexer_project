@@ -204,7 +204,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 			case PLUS, MINUS -> {
 				if (leftType == Type.INT && rightType == Type.INT) resultType = Type.INT;
-					//else if (leftType == Type.STRING && rightType == Type.STRING) resultType = Type.STRING;
+				//else if (leftType == Type.STRING && rightType == Type.STRING) resultType = Type.STRING;
 				else if (leftType == Type.BOOLEAN && rightType == Type.BOOLEAN) resultType = Type.BOOLEAN;
 				else if (leftType == FLOAT && rightType == FLOAT) resultType = Type.FLOAT;
 				else if (leftType == FLOAT && rightType == INT){
@@ -230,7 +230,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}
 			case TIMES,MOD,DIV -> {
 				if (leftType == Type.INT && rightType == Type.INT) resultType = Type.INT;
-					//else if (leftType == Type.STRING && rightType == Type.STRING) resultType = Type.STRING;
+				//else if (leftType == Type.STRING && rightType == Type.STRING) resultType = Type.STRING;
 				else if (leftType == Type.BOOLEAN && rightType == Type.BOOLEAN) resultType = Type.BOOLEAN;
 				else if (leftType == FLOAT && rightType == FLOAT) resultType = Type.FLOAT;
 				else if (leftType == FLOAT && rightType == INT){
@@ -541,7 +541,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 					}
 				}
 				check(assignmentCompatible(declaration.getType(), initializerType) || flag == true,declaration,
-						"type of expression and declared type do not match " + declaration.getType() + " + " + initializerType);
+				"type of expression and declared type do not match " + declaration.getType() + " + " + initializerType);
 			}
 			else if(declaration.getOp().getKind() == Kind.LARROW) {
 				if(initializer.getType() != CONSOLE && initializer.getType() != STRING) {
@@ -581,7 +581,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 					}
 				}
 				check(assignmentCompatible(declaration.getType(), initializerType) || flag == true,declaration,
-						"type of expression and declared type do not match rhs not in symbol table " + declaration.getType() + " + " + initializerType);
+				"type of expression and declared type do not match rhs not in symbol table " + declaration.getType() + " + " + initializerType);
 			}
 			declaration.setInitialized(true);
 			return null;
