@@ -90,7 +90,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.append(String.valueOf(intValue));
 		}
 		// return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
-		
+
 		return sb;
 
 	}
@@ -100,7 +100,7 @@ public class CodeGenVisitor implements ASTVisitor {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		Type type = floatLitExpr.getType();
 		float floatValue = floatLitExpr.getValue();
-		
+
 		if (floatLitExpr.getCoerceTo() != Type.FLOAT && floatLitExpr.getCoerceTo() != null) {
 			genTypeConversion(type, floatLitExpr.getCoerceTo(), sb);
 			sb.append(floatLitExpr.getText());
@@ -111,9 +111,9 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.append(floatLitExpr.getText());
 			sb.append("f");
 		}
-		
 
-		
+
+
 		return sb;
 		// return ((CodeGenStringBuilder) arg).append(String.valueOf(sb));
 	}
@@ -130,8 +130,8 @@ public class CodeGenVisitor implements ASTVisitor {
 			imports.add("edu.ufl.cise.plc.runtime.ConsoleIO");
 		}
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-		// sb.append("(Integer) ConsoleIO.readValueFromConsole(gINTh, gEnter
-		// integer:h);");
+		// sb.append("(Integer) ConsoleIO.readValueFromConsole(ï¿½gINTï¿½h, ï¿½gEnter
+		// integer:ï¿½h);");
 		String box = "(" + primitiveToWrapper(Types.toString(consoleExpr.getCoerceTo())) + ")";
 		String type = consoleExpr.getCoerceTo().toString();
 		String prompt = "Enter " + Types.toString(consoleExpr.getCoerceTo()) + ":";
@@ -151,9 +151,22 @@ public class CodeGenVisitor implements ASTVisitor {
 		Type type = unaryExpression.getType();
 		Expr expr = unaryExpression.getExpr();
 
-		// TODO check if binary expr is in assignment 5
-		if (type == Type.IMAGE || type == Type.COLOR || type == Type.COLORFLOAT)
-			throw new UnsupportedOperationException("Not implemented");
+
+		if (type == Type.IMAGE || type == Type.COLOR || type == Type.COLORFLOAT){
+			//TODO idk what this if does
+			if(unaryExpression.getOp().getKind() == Kind.COLOR_OP){
+
+				if(expr.getType() == Type.INT){
+
+				}
+
+
+
+			}
+
+
+		}
+
 		else {
 			sb.lparen();
 			sb.append(unaryExpression.getOp().getText());
@@ -200,7 +213,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.lparen();
 			binaryExpr.getLeft().visit(this, sb);
 			sb.rparen();
-	
+
 			sb.append(binaryExpr.getOp().getText());
 			sb.lparen();
 			binaryExpr.getRight().visit(this, sb);
@@ -220,7 +233,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
 		// TODO might be wrong visit/also check if it needed
 		// identExpr.visit(this, sb);
-		
+
 
 		if (identExpr.getCoerceTo() != type && identExpr.getCoerceTo() != null) {
 			genTypeConversion(type, identExpr.getCoerceTo(), sb);
@@ -257,11 +270,11 @@ public class CodeGenVisitor implements ASTVisitor {
 	@Override
 	public Object visitDimension(Dimension dimension, Object arg) throws Exception {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-		
+
 		dimension.getWidth().visit(this, sb);
 		sb.comma().space();
 		dimension.getHeight().visit(this, sb);
-		
+
 		return sb;
 		//throw new UnsupportedOperationException("Dimension not yet implemented.");
 	}
@@ -294,6 +307,8 @@ public class CodeGenVisitor implements ASTVisitor {
 		}
 		sb.semi();
 		sb.newline();
+
+
 
 		return sb;
 	}
@@ -402,7 +417,7 @@ public class CodeGenVisitor implements ASTVisitor {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		Type type = nameDefWithDim.getType();
 		String name = nameDefWithDim.getName();
-		
+
 		if(type == Type.IMAGE) {
 			sb.append("BufferedImage ");
 		}
@@ -414,7 +429,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			}
 		}
 		sb.append(name).space();
-		
+
 		return sb;
 	}
 
@@ -446,7 +461,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			Kind op = declaration.getOp().getKind();
 			if (op == Kind.ASSIGN || op == Kind.LARROW) {
 				declaration.getNameDef().visit(this, sb);
-                sb.equals();
+				sb.equals();
 				//sb.append(opExpr.getText());
 				if (declaration.getNameDef().getType() == Type.IMAGE) {
 					imports.add("java.awt.image.BufferedImage");
@@ -466,7 +481,7 @@ public class CodeGenVisitor implements ASTVisitor {
 				}
 				else {
 					if (declaration.getExpr().getCoerceTo() != declaration.getExpr().getType() && declaration.getExpr().getCoerceTo() != null) {
-	//					if(declaration.getExpr().)
+						//					if(declaration.getExpr().)
 						genTypeConversionNoParen(declaration.getType(), declaration.getExpr().getCoerceTo(), sb);
 						sb.lparen();
 						declaration.getExpr().visit(this, sb);
@@ -502,19 +517,19 @@ public class CodeGenVisitor implements ASTVisitor {
 	public void genTypeConversion(Type type, Type coerceTo, CodeGenStringBuilder sb) {
 		sb.append("((" + Types.toString(coerceTo) + ")");
 	}
-	
+
 	public void genTypeConversionNoParen(Type type, Type coerceTo, CodeGenStringBuilder sb) {
 		sb.append("(" + Types.toString(coerceTo) + ")");
 	}
-	
+
 
 	// Function to turn primitives to wrapper types (i.e. int -> Integer)
 	private String primitiveToWrapper(String primitive) {
 		return switch (primitive) {
-		case "boolean" -> "Boolean";
-		case "float" -> "Float";
-		case "int" -> "Integer";
-		default -> throw new IllegalArgumentException("No wrapper for type: " + primitive);
+			case "boolean" -> "Boolean";
+			case "float" -> "Float";
+			case "int" -> "Integer";
+			default -> throw new IllegalArgumentException("No wrapper for type: " + primitive);
 		};
 	}
 
