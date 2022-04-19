@@ -130,9 +130,10 @@ public class CodeGenVisitor implements ASTVisitor {
 			imports.add("edu.ufl.cise.plc.runtime.ConsoleIO");
 		}
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-		// sb.append("(Integer) ConsoleIO.readValueFromConsole(�gINT�h, �gEnter
-		// integer:�h);");
-		String box = "(" + primitiveToWrapper(Types.toString(consoleExpr.getCoerceTo())) + ")";
+		String box = "";
+		// sb.append("(Integer) ConsoleIO.readValueFromConsole(�ｿｽgINT�ｿｽh, �ｿｽgEnter
+		// integer:�ｿｽh);");
+		box = "(" + primitiveToWrapper(Types.toString(consoleExpr.getCoerceTo())) + ")";
 		String type = consoleExpr.getCoerceTo().toString();
 		String prompt = "Enter " + Types.toString(consoleExpr.getCoerceTo()) + ":";
 		String consoleStatement = box + " ConsoleIO.readValueFromConsole(\"" + type + "\", \"" + prompt + "\")";
@@ -402,7 +403,6 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.tab().tab();
 			decAndStatement.get(x).visit(this, sb);
 			sb.newline();
-
 		}
 		sb.tab().RCurl().newline().RCurl();
 
@@ -564,6 +564,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			case "boolean" -> "Boolean";
 			case "float" -> "Float";
 			case "int" -> "Integer";
+			case "String" -> "String";
 			default -> throw new IllegalArgumentException("No wrapper for type: " + primitive);
 		};
 	}
