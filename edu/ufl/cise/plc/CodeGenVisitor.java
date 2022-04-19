@@ -120,8 +120,17 @@ public class CodeGenVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitColorConstExpr(ColorConstExpr colorConstExpr, Object arg) throws Exception {
-		throw new UnsupportedOperationException("ColorConstExpr not yet implemented.");
-		// return null;
+		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+		if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+			imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
+		}
+		if(imports.indexOf("java.awt.Color") == -1) {
+			imports.add("java.awt.Color");
+		}
+		
+		sb.append("ColorTuple.unpack(Color." + colorConstExpr.getFirstToken().getText() + ".getRGB())");
+		
+		return sb;
 	}
 
 	@Override
@@ -310,6 +319,9 @@ public class CodeGenVisitor implements ASTVisitor {
 		String name = assignmentStatement.getName();
 		Expr expr = assignmentStatement.getExpr();
 		if(expr.getType() == Type.COLOR && expr.getCoerceTo() == Type.COLOR) {
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+			}
 			assignmentStatement.getSelector().visit(this, fakeOne);
 			String [] splitArr = fakeOne.getString().split(",");
 			String var1 = splitArr[0].trim();
