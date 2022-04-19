@@ -33,6 +33,12 @@ import edu.ufl.cise.plc.ast.WriteStatement;
 import edu.ufl.cise.plc.CodeGenStringBuilder;
 import edu.ufl.cise.plc.runtime.ConsoleIO;
 
+import edu.ufl.cise.plc.runtime.ColorTuple;
+import edu.ufl.cise.plc.runtime.ImageOps;
+import edu.ufl.cise.plc.runtime.javaCompilerClassLoader.PLCLangExec;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import javax.naming.Name;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -157,14 +163,24 @@ public class CodeGenVisitor implements ASTVisitor {
 			if(unaryExpression.getOp().getKind() == Kind.COLOR_OP){
 
 				if(expr.getType() == Type.INT){
+					//   Image a <-
+					ColorTuple.getBlue();
+
 
 				}
 
 
 
 			}
+			//TODO idk if this is right
+			else if(expr.getType() == Type.IMAGE ){
+				//  BufferedImage image = (BufferedImage)(new PLCLangExec("mypackage",true)).exec(input, null);
+				ImageOps.extractRed();
+				ImageOps.extractGreen();
+				ImageOps.extractBlue();
 
 
+			}
 		}
 
 		else {
@@ -309,6 +325,14 @@ public class CodeGenVisitor implements ASTVisitor {
 		sb.newline();
 
 
+		if(assignmentStatement.getTargetDec().getType() == Type.IMAGE && assignmentStatement.getExpr().getType() == Type.IMAGE){
+			//TODO check if this works
+			if(assignmentStatement.getTargetDec().getDim() != null){}
+
+			ImageOps.resize();
+		}
+
+
 
 		return sb;
 	}
@@ -322,6 +346,12 @@ public class CodeGenVisitor implements ASTVisitor {
 		sb.append("ConsoleIO.console.println(");
 		writeStatement.getSource().visit(this, sb);
 		sb.rparen().semi().newline();
+		if(writeStatement.getDest().getType() == Type.CONSOLE && writeStatement.getSource().getType() == Type.IMAGE){
+			ConsoleIO.displayImageOnScreen();
+
+		}
+
+
 		return null;
 	}
 
