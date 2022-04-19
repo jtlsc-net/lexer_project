@@ -126,8 +126,17 @@ public class CodeGenVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitColorConstExpr(ColorConstExpr colorConstExpr, Object arg) throws Exception {
-		throw new UnsupportedOperationException("ColorConstExpr not yet implemented.");
-		// return null;
+		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+		if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+			imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
+		}
+		if(imports.indexOf("java.awt.Color") == -1) {
+			imports.add("java.awt.Color");
+		}
+		
+		sb.append("ColorTuple.unpack(Color." + colorConstExpr.getFirstToken().getText() + ".getRGB())");
+		
+		return sb;
 	}
 
 	@Override
@@ -136,9 +145,10 @@ public class CodeGenVisitor implements ASTVisitor {
 			imports.add("edu.ufl.cise.plc.runtime.ConsoleIO");
 		}
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-		// sb.append("(Integer) ConsoleIO.readValueFromConsole(�gINT�h, �gEnter
-		// integer:�h);");
-		String box = "(" + primitiveToWrapper(Types.toString(consoleExpr.getCoerceTo())) + ")";
+		String box = "";
+		// sb.append("(Integer) ConsoleIO.readValueFromConsole(�ｿｽgINT�ｿｽh, �ｿｽgEnter
+		// integer:�ｿｽh);");
+		box = "(" + primitiveToWrapper(Types.toString(consoleExpr.getCoerceTo())) + ")";
 		String type = consoleExpr.getCoerceTo().toString();
 		String prompt = "Enter " + Types.toString(consoleExpr.getCoerceTo()) + ":";
 		String consoleStatement = box + " ConsoleIO.readValueFromConsole(\"" + type + "\", \"" + prompt + "\")";
@@ -148,7 +158,23 @@ public class CodeGenVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitColorExpr(ColorExpr colorExpr, Object arg) throws Exception {
-		return null;
+		if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+			imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+		}
+		if (imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+			imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
+		}
+		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+		sb.append("new ColorTuple");
+		sb.lparen();
+		colorExpr.getRed().visit(this, sb);
+		sb.comma().space();
+		colorExpr.getGreen().visit(this, sb);
+		sb.comma().space();
+		colorExpr.getBlue().visit(this, sb);
+		sb.rparen();
+		
+		return sb;
 	}
 
 	@Override
@@ -297,29 +323,45 @@ public class CodeGenVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
-		throw new UnsupportedOperationException("PixelSelector not yet implemented.");
-		// return null;
+		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+		sb.append(pixelSelector.getX().getText() + ", " + pixelSelector.getY().getText());
+		return sb;
 	}
 
 	@Override
 	public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-
+		CodeGenStringBuilder fakeOne = new CodeGenStringBuilder();
 		String name = assignmentStatement.getName();
 		Expr expr = assignmentStatement.getExpr();
-
-		sb.append(name);
-		sb.equals();
-		if (expr.getCoerceTo() != expr.getType() && expr.getCoerceTo() != null) {
-//			if(declaration.getExpr().)
-			genTypeConversionNoParen(expr.getType(), expr.getCoerceTo(), sb);
-			sb.lparen();
+		if(expr.getType() == Type.COLOR && expr.getCoerceTo() == Type.COLOR) {
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+			}
+			assignmentStatement.getSelector().visit(this, fakeOne);
+			String [] splitArr = fakeOne.getString().split(",");
+			String var1 = splitArr[0].trim();
+			String var2 = splitArr[1].trim();
+			sb.append("for( int " + var1 + " = 0; " + var1 + " < " + name + ".getWidth(); " + var1 + "++)").newline().tab().tab().tab();
+			sb.append("for( int " + var2 + " = 0; " + var2 + " < " + name + ".getHeight(); " + var2 + "++)").newline().tab().tab().tab().tab();
+			sb.append("ImageOps.setColor(" + name + ", " + var1 + ", " + var2 + ", ");
 			expr.visit(this, sb);
 			sb.rparen();
 		}
 		else {
-			expr.visit(this, sb);
-//	        sb.append(expr.getText());
+			sb.append(name);
+			sb.equals();
+			if (expr.getCoerceTo() != expr.getType() && expr.getCoerceTo() != null) {
+	//			if(declaration.getExpr().)
+				genTypeConversionNoParen(expr.getType(), expr.getCoerceTo(), sb);
+				sb.lparen();
+				expr.visit(this, sb);
+				sb.rparen();
+			}
+			else {
+				expr.visit(this, sb);
+	//	        sb.append(expr.getText());
+			}
 		}
 		sb.semi();
 		sb.newline();
@@ -403,7 +445,6 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.tab().tab();
 			decAndStatement.get(x).visit(this, sb);
 			sb.newline();
-
 		}
 		sb.tab().RCurl().newline().RCurl();
 
@@ -480,7 +521,9 @@ public class CodeGenVisitor implements ASTVisitor {
 		if (declaration.getOp() == null) {
 			declaration.getNameDef().visit(this, sb);
 			if(declaration.getNameDef().getType() == Type.IMAGE) {
-				imports.add("java.awt.image.BufferedImage");
+				if (imports.indexOf("java.awt.image.BufferedImage") == -1) {
+					imports.add("java.awt.image.BufferedImage");
+				}
 				sb.equals().space();
 				sb.append("new BufferedImage(");
 				declaration.getDim().visit(this, sb);
@@ -494,8 +537,12 @@ public class CodeGenVisitor implements ASTVisitor {
 				sb.equals();
 				//sb.append(opExpr.getText());
 				if (declaration.getNameDef().getType() == Type.IMAGE) {
-					imports.add("java.awt.image.BufferedImage");
-					imports.add("edu.ufl.cise.plc.runtime.FileURLIO");
+					if (imports.indexOf("java.awt.image.BufferedImage") == -1) {
+						imports.add("java.awt.image.BufferedImage");
+					}
+					if (imports.indexOf("edu.ufl.cise.plc.runtime.FileURLIO") == -1) {
+						imports.add("edu.ufl.cise.plc.runtime.FileURLIO");
+					}
 					sb.space();
 					if(declaration.getDim() == null) {
 						throw new UnsupportedOperationException("image without dimension not yet implemented.");
@@ -559,6 +606,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			case "boolean" -> "Boolean";
 			case "float" -> "Float";
 			case "int" -> "Integer";
+			case "String" -> "String";
 			default -> throw new IllegalArgumentException("No wrapper for type: " + primitive);
 		};
 	}
