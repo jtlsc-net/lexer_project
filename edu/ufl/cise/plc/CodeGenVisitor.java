@@ -133,9 +133,9 @@ public class CodeGenVisitor implements ASTVisitor {
 		if(imports.indexOf("java.awt.Color") == -1) {
 			imports.add("java.awt.Color");
 		}
-		
+
 		sb.append("ColorTuple.unpack(Color." + colorConstExpr.getFirstToken().getText() + ".getRGB())");
-		
+
 		return sb;
 	}
 
@@ -173,7 +173,7 @@ public class CodeGenVisitor implements ASTVisitor {
 		sb.comma().space();
 		colorExpr.getBlue().visit(this, sb);
 		sb.rparen();
-		
+
 		return sb;
 	}
 
@@ -352,7 +352,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.append(name);
 			sb.equals();
 			if (expr.getCoerceTo() != expr.getType() && expr.getCoerceTo() != null) {
-	//			if(declaration.getExpr().)
+				//			if(declaration.getExpr().)
 				genTypeConversionNoParen(expr.getType(), expr.getCoerceTo(), sb);
 				sb.lparen();
 				expr.visit(this, sb);
@@ -360,7 +360,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			}
 			else {
 				expr.visit(this, sb);
-	//	        sb.append(expr.getText());
+				//	        sb.append(expr.getText());
 			}
 		}
 		sb.semi();
@@ -371,7 +371,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			//TODO check if this works
 			if(assignmentStatement.getTargetDec().getDim() != null){}
 
-			ImageOps.resize();
+			//ImageOps.resize();
 		}
 
 
@@ -389,10 +389,21 @@ public class CodeGenVisitor implements ASTVisitor {
 		writeStatement.getSource().visit(this, sb);
 		sb.rparen().semi().newline();
 		if(writeStatement.getDest().getType() == Type.CONSOLE && writeStatement.getSource().getType() == Type.IMAGE){
-			ConsoleIO.displayImageOnScreen();
+			sb.append("ConsoleIO.displayImageOnScreen(");
+			writeStatement.getSource().getText();
+			sb.lparen().semi().newline();
+		}
+		else if(writeStatement.getDest().getType() == Type.STRING){
+			//TODO check if <sourceImage> is represented here
+			sb.append("FileURLIO.writeImage("+writeStatement.getSource().getText() + "," + writeStatement.getDest().getText() + ");");
+
+
+
+		}else{
+			sb.append("FileURLIO.writeValue("+writeStatement.getSource().getText() + "," +  writeStatement.getDest().getText()+ ");" );
+
 
 		}
-
 
 		return null;
 	}
