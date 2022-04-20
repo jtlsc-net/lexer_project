@@ -612,6 +612,11 @@ public class CodeGenVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
+		if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+			imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
+		}
+
+
 		throw new UnsupportedOperationException("UnaryExprPostfix not yet implemented.");
 		// return null;
 	}
