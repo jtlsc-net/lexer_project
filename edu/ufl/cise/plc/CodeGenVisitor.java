@@ -189,8 +189,6 @@ public class CodeGenVisitor implements ASTVisitor {
 			if(unaryExpression.getOp().getKind() == Kind.COLOR_OP){
 
 				if(expr.getType() == Type.INT){
-					//   Image a <-
-					ColorTuple.getBlue();
 
 
 				}
@@ -201,9 +199,6 @@ public class CodeGenVisitor implements ASTVisitor {
 			//TODO idk if this is right
 			else if(expr.getType() == Type.IMAGE ){
 				//  BufferedImage image = (BufferedImage)(new PLCLangExec("mypackage",true)).exec(input, null);
-				ImageOps.extractRed();
-				ImageOps.extractGreen();
-				ImageOps.extractBlue();
 
 
 			}
@@ -366,13 +361,13 @@ public class CodeGenVisitor implements ASTVisitor {
 		sb.semi();
 		sb.newline();
 
+		//TODO problem with this
+		//    if(assignmentStatement.getTargetDec().getType() == Type.IMAGE && assignmentStatement.getExpr().getType() == Type.IMAGE){
+		//TODO check if this works
+		//      if(assignmentStatement.getTargetDec().getDim() != null){}
 
-		if(assignmentStatement.getTargetDec().getType() == Type.IMAGE && assignmentStatement.getExpr().getType() == Type.IMAGE){
-			//TODO check if this works
-			if(assignmentStatement.getTargetDec().getDim() != null){}
-
-			//ImageOps.resize();
-		}
+		//ImageOps.resize();
+		//}
 
 
 
@@ -393,13 +388,13 @@ public class CodeGenVisitor implements ASTVisitor {
 			writeStatement.getSource().getText();
 			sb.lparen().semi().newline();
 		}
-		else if(writeStatement.getDest().getType() == Type.STRING){
+		else if(writeStatement.getDest().getType() == Type.STRING && writeStatement.getSource().getType() == Type.IMAGE ){
 			//TODO check if <sourceImage> is represented here
 			sb.append("FileURLIO.writeImage("+writeStatement.getSource().getText() + "," + writeStatement.getDest().getText() + ");");
 
 
 
-		}else{
+		}else if(writeStatement.getDest().getType() == Type.STRING  && writeStatement.getSource().getType() != Type.IMAGE){
 			sb.append("FileURLIO.writeValue("+writeStatement.getSource().getText() + "," +  writeStatement.getDest().getText()+ ");" );
 
 
@@ -414,7 +409,26 @@ public class CodeGenVisitor implements ASTVisitor {
 		String name = readStatement.getName();
 		Expr expr = readStatement.getSource();
 		if (readStatement.getSource().getType() != Type.CONSOLE) {
-			throw new UnsupportedOperationException("Not implemented");
+			//TODO Check if should be placed here
+			if(readStatement.getTargetDec().getDim() != null &&  readStatement.getSource().getType() ==Type.IMAGE){
+
+				//TODO this might not be right
+				readStatement.getTargetDec().getDim().visit(this, sb);
+				sb.equals();
+				sb.append("FileURLIO.readImage(");
+				readStatement.getSource().visit(this, sb);
+				sb.comma();
+				readStatement.getSelector().visit(this,sb);
+				sb.append(");\nFileURLIO.closeFiles();\n");
+
+
+			}
+			else{
+				sb.append("FileURLIO.readImage(");
+				readStatement.getSource().visit(this, sb);
+
+			}
+
 		} else {
 			sb.append(name);
 			sb.equals();
