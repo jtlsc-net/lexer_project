@@ -615,10 +615,15 @@ public class CodeGenVisitor implements ASTVisitor {
 		if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
 			imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
 		}
+		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+		sb.append("ColorTuple.unpack(" + unaryExprPostfix.getExpr().getText()+ ".getRGB(");
+		unaryExprPostfix.getSelector().visit(this, sb);
+		sb.append("))");
 
 
-		throw new UnsupportedOperationException("UnaryExprPostfix not yet implemented.");
-		// return null;
+
+
+		return sb;
 	}
 
 	public void genTypeConversion(Type type, Type coerceTo, CodeGenStringBuilder sb) {
