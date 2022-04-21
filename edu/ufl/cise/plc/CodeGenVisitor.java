@@ -144,6 +144,9 @@ public class CodeGenVisitor implements ASTVisitor {
 		if (imports.indexOf("edu.ufl.cise.plc.runtime.ConsoleIO") == -1) {
 			imports.add("edu.ufl.cise.plc.runtime.ConsoleIO");
 		}
+		if (imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+			imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
+		}
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		String box = "";
 		// sb.append("(Integer) ConsoleIO.readValueFromConsole(�ｿｽgINT�ｿｽh, �ｿｽgEnter
@@ -153,6 +156,11 @@ public class CodeGenVisitor implements ASTVisitor {
 		String prompt = "Enter " + Types.toString(consoleExpr.getCoerceTo()) + ":";
 		String consoleStatement = box + " ConsoleIO.readValueFromConsole(\"" + type + "\", \"" + prompt + "\")";
 		sb.append(consoleStatement);
+
+
+		//sb.append("ConsoleIO.readValueFromConsole(ConsoleIO.readValueFromConsole(“COLOR”, “Enter RGB values:”);");
+
+
 		return sb;
 	}
 
@@ -189,19 +197,42 @@ public class CodeGenVisitor implements ASTVisitor {
 			if(unaryExpression.getOp().getKind() == Kind.COLOR_OP){
 
 				if(expr.getType() == Type.INT){
+					if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+						imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
+					}
+					sb.append("ColorTuple." + unaryExpression.getOp().getText() + "(");
+					unaryExpression.getExpr().visit(this,sb);
+					sb.rparen().semi().newline();
+				}
+				else if(expr.getType() == Type.IMAGE ){
+					if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+						imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
+					}
+					//  BufferedImage image = (BufferedImage)(new PLCLangExec("mypackage",true)).exec(input, null);
+					sb.append("ColorTuple." + unaryExpression.getOp().getText() + "(");
+					unaryExpression.getExpr().visit(this,sb);
+					sb.rparen().semi().newline();
+
+				}else if(expr.getType() == Type.IMAGE ){
+
+
+					//TODO this is probably wrong, needs work
+					sb.append("ImageOps.extract");
+					//switch() {
+
+
+					//   }
+					sb.append("(");
+					expr.visit(this,sb);
+					sb.rparen().semi().newline();
 
 
 				}
 
 
-
 			}
 			//TODO idk if this is right
-			else if(expr.getType() == Type.IMAGE ){
-				//  BufferedImage image = (BufferedImage)(new PLCLangExec("mypackage",true)).exec(input, null);
 
-
-			}
 		}
 
 		else {
@@ -362,11 +393,13 @@ public class CodeGenVisitor implements ASTVisitor {
 		sb.newline();
 
 		//TODO problem with this
-		//    if(assignmentStatement.getTargetDec().getType() == Type.IMAGE && assignmentStatement.getExpr().getType() == Type.IMAGE){
+		//if(assignmentStatement.getTargetDec().getType() == Type.IMAGE && assignmentStatement.getExpr().getType() == Type.IMAGE){
 		//TODO check if this works
-		//      if(assignmentStatement.getTargetDec().getDim() != null){}
+		//  if(assignmentStatement.getTargetDec().getDim() != null){
+		//    sb.append("ImageOps.resize(" + assignmentStatement.getText()+")");
+		// }
 
-		//ImageOps.resize();
+
 		//}
 
 
@@ -386,7 +419,7 @@ public class CodeGenVisitor implements ASTVisitor {
 		if(writeStatement.getDest().getType() == Type.CONSOLE && writeStatement.getSource().getType() == Type.IMAGE){
 			sb.append("ConsoleIO.displayImageOnScreen(");
 			writeStatement.getSource().getText();
-			sb.lparen().semi().newline();
+			sb.rparen().semi().newline();
 		}
 		else if(writeStatement.getDest().getType() == Type.STRING && writeStatement.getSource().getType() == Type.IMAGE ){
 			//TODO check if <sourceImage> is represented here
@@ -424,9 +457,15 @@ public class CodeGenVisitor implements ASTVisitor {
 
 			}
 			else{
-				sb.append("FileURLIO.readImage(");
-				readStatement.getSource().visit(this, sb);
+				if( readStatement.getSource().getType() ==Type.IMAGE) {
+					readStatement.getTargetDec().getDim().visit(this, sb);
+					sb.equals();
+					sb.append("FileURLIO.readImage(");
+					readStatement.getSource().visit(this, sb);
+					sb.append(");\nFileURLIO.closeFiles();\n");
 
+
+				}
 			}
 
 		} else {
