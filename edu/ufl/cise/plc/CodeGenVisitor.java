@@ -536,8 +536,8 @@ public class CodeGenVisitor implements ASTVisitor {
 			if (imports.indexOf("edu.ufl.cise.plc.runtime.ConsoleIO") == -1) {
 				imports.add("edu.ufl.cise.plc.runtime.ConsoleIO");
 			}
-			writeStatement.getSource().visit(this, sb);
 			sb.append("ConsoleIO.console.println(");
+			writeStatement.getSource().visit(this, sb);
 			sb.rparen().semi().newline();
 		}
 
