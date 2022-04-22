@@ -85,7 +85,7 @@ public class CodeGenVisitor implements ASTVisitor {
 		int intValue = intLitExpr.getValue();
 
 		// TODO check if right
-
+		
 		if(intLitExpr.getCoerceTo() == Type.IMAGE) {
 			sb.append(String.valueOf(intValue));
 		}
@@ -269,7 +269,20 @@ public class CodeGenVisitor implements ASTVisitor {
 		// throw new UnsupportedOperationException("Not implemented");
 		// else {
 		sb.lparen();
-		if((left.getType() == Type.IMAGE || right.getType() == Type.IMAGE) && (left.getType() == Type.INT || right.getType() == Type.INT)) {
+		if ((left.getType() == Type.COLOR && right.getType() == Type.COLOR) || (left.getCoerceTo() == Type.COLOR && right.getCoerceTo() == Type.COLOR)) {
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+			}
+			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.OP.*") == -1) {
+				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.OP.*");
+			}
+			sb.append("ImageOps.binaryTupleOp(" + binaryExpr.getOp().getKind().toString() + ", ");
+			left.visit(this, sb);
+			sb.comma().space();
+			right.visit(this, sb);
+			sb.rparen();
+		}
+		else if((left.getType() == Type.IMAGE || right.getType() == Type.IMAGE) && (left.getType() == Type.INT || right.getType() == Type.INT)) { 
 			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
 				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
 			}
@@ -393,7 +406,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.rparen();
 		}        //TODO problem with this
 
-   /*
+ /*  
       else if (assignmentStatement.getTargetDec().getType() == Type.IMAGE) {
             //TODO check if this works/ this was given pseudocode by a ta, might not work for us
             // if target type image
@@ -407,6 +420,7 @@ public class CodeGenVisitor implements ASTVisitor {
             //resize rhs   imageops.resize(lhs)
             //else
             //clone
+
             //else
             //append(assignmentstatement.getname "=" visitexpr)
             if (assignmentStatement.getSelector() != null) {
@@ -414,14 +428,17 @@ public class CodeGenVisitor implements ASTVisitor {
                 sb.comma();
                 assignmentStatement.getSelector().getY().visit(this, sb);
             }
+
             else {
                 if (expr.getCoerceTo() == Type.COLOR) {
                     sb.append("ImageOps.setcolor(" + name + ",");
+
                     //TODO check if this should be get x and get y instead
                     assignmentStatement.getSelector().visit(this, sb);
                     sb.comma();
                     assignmentStatement.getExpr().visit(this, sb);
                     sb.append(")");
+
                 } else {
                     // expr.setCoerceTo(Type.IMAGE);
                     if (assignmentStatement.getTargetDec().getDim() != null) {
@@ -435,10 +452,19 @@ public class CodeGenVisitor implements ASTVisitor {
                         expr.visit(this,sb);
                         sb.append(")");
                     }
+
+
                 }
+
+
             }
+
+
         }
+
 */
+
+
 /*
             ///TODO is this namedef for assignment statement
             if(assignmentStatement.getExpr().getType() == Type.IMAGE && assignmentStatement.getTargetDec().getDim() != null&& expr.getCoerceTo()==Type.COLOR ){
@@ -456,6 +482,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 sb.append("ImageOps.setColor(" + name + ", " + var1 + ", " + var2 + ", ");
                 expr.visit(this, sb);
                 sb.rparen();
+
             }
             */
 
@@ -630,9 +657,15 @@ public class CodeGenVisitor implements ASTVisitor {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		Type type = nameDef.getType();
 		String name = nameDef.getName();
-
+		
 		if(type == Type.IMAGE) {
 			sb.append("BufferedImage ");
+		}
+		else if (type == Type.COLOR) {
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
+			}
+			sb.append("ColorTuple").space();
 		}
 		else if (type == Type.STRING) {
 			sb.append("String").space();
@@ -652,6 +685,12 @@ public class CodeGenVisitor implements ASTVisitor {
 
 		if(type == Type.IMAGE) {
 			sb.append("BufferedImage ");
+		}
+		else if(type == Type.COLOR) { 
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
+			}
+			sb.append("ColorTuple").space();
 		}
 		else {
 			if (type == Type.STRING) {
@@ -768,7 +807,6 @@ public class CodeGenVisitor implements ASTVisitor {
 		sb.append(".getRGB(");
 		unaryExprPostfix.getSelector().visit(this, sb);
 		sb.append("))");
-
 
 
 

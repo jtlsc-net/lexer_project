@@ -38,7 +38,7 @@ public class Types {
 	public static String toString(Type s) {
 		return switch(s) {
 		case BOOLEAN -> "boolean";
-		case COLOR -> "color";
+		case COLOR -> "ColorTuple";
 		case CONSOLE -> "console";
 		case FLOAT -> "float";
 		case IMAGE -> "BufferedImage";
