@@ -539,6 +539,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 						initializer.setCoerceTo(COLOR);
 						flag = true;
 					}
+					if(declaration.getType() == IMAGE && initializerType == COLOR) {
+						initializer.setCoerceTo(IMAGE);
+						flag = true;
+					}
 				}
 				check(assignmentCompatible(declaration.getType(), initializerType) || flag == true,declaration,
 				"type of expression and declared type do not match " + declaration.getType() + " + " + initializerType);
@@ -579,6 +583,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 						flag = true;
 					}
+				}
+				if(declaration.getType() == IMAGE && initializerType == COLOR) {
+					initializer.setCoerceTo(IMAGE);
+					flag = true;
 				}
 				check(assignmentCompatible(declaration.getType(), initializerType) || flag == true,declaration,
 				"type of expression and declared type do not match rhs not in symbol table " + declaration.getType() + " + " + initializerType);

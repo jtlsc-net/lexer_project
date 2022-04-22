@@ -89,6 +89,9 @@ public class CodeGenVisitor implements ASTVisitor {
 		if(intLitExpr.getCoerceTo() == Type.IMAGE) {
 			sb.append(String.valueOf(intValue));
 		}
+		else if(intLitExpr.getCoerceTo() == Type.COLOR) {
+			sb.append(String.valueOf(intValue));
+		}
 		else if (intLitExpr.getCoerceTo() != type && intLitExpr.getCoerceTo() != null) {
 			System.out.println(intLitExpr.getCoerceTo().toString());
 			genTypeConversion(type, intLitExpr.getCoerceTo(), sb);
@@ -391,6 +394,7 @@ public class CodeGenVisitor implements ASTVisitor {
 		CodeGenStringBuilder fakeOne = new CodeGenStringBuilder();
 		String name = assignmentStatement.getName();
 		Expr expr = assignmentStatement.getExpr();
+		System.out.println(assignmentStatement.getExpr());
 		if (expr.getType() == Type.COLOR && expr.getCoerceTo() == Type.COLOR) {
 			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
 				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
@@ -405,6 +409,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			expr.visit(this, sb);
 			sb.rparen();
 		}        //TODO problem with this
+		
 
  /*  
       else if (assignmentStatement.getTargetDec().getType() == Type.IMAGE) {
