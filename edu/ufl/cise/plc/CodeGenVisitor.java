@@ -85,9 +85,12 @@ public class CodeGenVisitor implements ASTVisitor {
 		int intValue = intLitExpr.getValue();
 
 		// TODO check if right
-
-		if (intLitExpr.getCoerceTo() != type && intLitExpr.getCoerceTo() != null) {
-
+		
+		if(intLitExpr.getCoerceTo() == Type.IMAGE) {
+			sb.append(String.valueOf(intValue));
+		}
+		else if (intLitExpr.getCoerceTo() != type && intLitExpr.getCoerceTo() != null) {
+			System.out.println(intLitExpr.getCoerceTo().toString());
 			genTypeConversion(type, intLitExpr.getCoerceTo(), sb);
 			sb.append(String.valueOf(intValue));
 			sb.append(")");
@@ -252,6 +255,8 @@ public class CodeGenVisitor implements ASTVisitor {
 		// CodeGenStringBuilder sb = new CodeGenStringBuilder();
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		Type type = binaryExpr.getType();
+		Expr left = binaryExpr.getLeft();
+		Expr right = binaryExpr.getRight();
 		// Expr leftExpr = binaryExpr.getLeft();
 		// Expr rightExpr = binaryExpr.getRight();
 //        Type leftType = leftExpr.getCoerceTo() != null ? leftExpr.getCoerceTo() : leftExpr.getType();
@@ -264,7 +269,20 @@ public class CodeGenVisitor implements ASTVisitor {
 		// throw new UnsupportedOperationException("Not implemented");
 		// else {
 		sb.lparen();
-		if(binaryExpr.getLeft().getType() == Type.STRING && binaryExpr.getOp().getKind() == Kind.EQUALS) {
+		if((left.getType() == Type.IMAGE || right.getType() == Type.IMAGE) && (left.getType() == Type.INT || right.getType() == Type.INT)) { 
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+			}
+			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.OP.*") == -1) {
+				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.OP.*");
+			}
+			sb.append("ImageOps.binaryImageScalarOp(" + binaryExpr.getOp().getKind().toString() + ", ");
+			left.visit(this, sb);
+			sb.comma().space();
+			right.visit(this, sb);
+			sb.rparen();
+		}
+		else if(binaryExpr.getLeft().getType() == Type.STRING && binaryExpr.getOp().getKind() == Kind.EQUALS) {
 			binaryExpr.getLeft().visit(this, sb);
 			sb.append(".equals(");
 			binaryExpr.getRight().visit(this, sb);
@@ -487,27 +505,43 @@ public class CodeGenVisitor implements ASTVisitor {
 		// TODO maybe need fix to have printstream
 		// PrintStream stream = ConsoleIO.console.println();
 		// ConsoleIO.console.println(<source>) ;
-		sb.append("ConsoleIO.console.println(");
-		writeStatement.getSource().visit(this, sb);
-		sb.rparen().semi().newline();
 		if(writeStatement.getDest().getType() == Type.CONSOLE && writeStatement.getSource().getType() == Type.IMAGE){
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ConsoleIO") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ConsoleIO");
+			}
 			sb.append("ConsoleIO.displayImageOnScreen(");
-			writeStatement.getSource().getText();
+			writeStatement.getSource().visit(this, sb);
 			sb.rparen().semi().newline();
 		}
 		else if(writeStatement.getDest().getType() == Type.STRING && writeStatement.getSource().getType() == Type.IMAGE ){
 			//TODO check if <sourceImage> is represented here
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.FileURLIO") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.FileURLIO");
+			}
+			writeStatement.getSource().visit(this, sb);
 			sb.append("FileURLIO.writeImage("+writeStatement.getSource().getText() + "," + writeStatement.getDest().getText() + ");");
 
 
 
 		}else if(writeStatement.getDest().getType() == Type.STRING  && writeStatement.getSource().getType() != Type.IMAGE){
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.FileURLIO") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.FileURLIO");
+			}
+			writeStatement.getSource().visit(this, sb);
 			sb.append("FileURLIO.writeValue("+writeStatement.getSource().getText() + "," +  writeStatement.getDest().getText()+ ");" );
 
 
 		}
+		else {
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ConsoleIO") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ConsoleIO");
+			}
+			writeStatement.getSource().visit(this, sb);
+			sb.append("ConsoleIO.console.println(");
+			sb.rparen().semi().newline();
+		}
 
-		return null;
+		return sb;
 	}
 
 	@Override
@@ -610,8 +644,11 @@ public class CodeGenVisitor implements ASTVisitor {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		Type type = nameDef.getType();
 		String name = nameDef.getName();
-
-		if (type == Type.STRING) {
+		
+		if(type == Type.IMAGE) {
+			sb.append("BufferedImage ");
+		}
+		else if (type == Type.STRING) {
 			sb.append("String").space();
 		} else {
 			sb.append(String.valueOf(type).toLowerCase()).space();
@@ -683,7 +720,18 @@ public class CodeGenVisitor implements ASTVisitor {
 					}
 					sb.space();
 					if(declaration.getDim() == null) {
-						throw new UnsupportedOperationException("image without dimension not yet implemented.");
+						//BinaryExpr x = (BinaryExpr) declaration.getExpr();
+						String x = declaration.getExpr().toString();
+						String[] y = x.split(" ");
+						if(!y[0].equals("BinaryExpr")) {
+							sb.append("FileURLIO.readImage(");
+							declaration.getExpr().visit(this, sb);
+							sb.rparen().semi().newline();
+						}
+						else {
+							declaration.getExpr().visit(this, sb);
+							sb.semi().newline();
+						}
 					}
 					else {
 						sb.append("FileURLIO.readImage(");
