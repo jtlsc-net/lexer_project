@@ -298,6 +298,9 @@ public class CodeGenVisitor implements ASTVisitor {
 			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.OP.*") == -1) {
 				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.OP.*");
 			}
+			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*") == -1) {
+				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*");
+			}
 			sb.append("ImageOps.binaryTupleOp(" + binaryExpr.getOp().getKind().toString() + ", ");
 			left.visit(this, sb);
 			sb.comma().space();
@@ -310,6 +313,9 @@ public class CodeGenVisitor implements ASTVisitor {
 			}
 			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.OP.*") == -1) {
 				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.OP.*");
+			}
+			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*") == -1) {
+				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*");
 			}
 			sb.append("ImageOps.binaryImageScalarOp(" + binaryExpr.getOp().getKind().toString() + ", ");
 			left.visit(this, sb);
@@ -428,8 +434,6 @@ public class CodeGenVisitor implements ASTVisitor {
 			expr.visit(this, sb);
 			sb.rparen();
 		}        //TODO problem with this
-
-
  /*
       else if (assignmentStatement.getTargetDec().getType() == Type.IMAGE) {
             //TODO check if this works/ this was given pseudocode by a ta, might not work for us
@@ -537,11 +541,8 @@ public class CodeGenVisitor implements ASTVisitor {
         //resize rhs   imageops.resize(lhs)
         //else
         //clone
-
         //else
         //append(assignmentstatement.getname "=" visitexpr)
-
-
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         CodeGenStringBuilder fakeOne = new CodeGenStringBuilder();
         String name = assignmentStatement.getName();
@@ -559,7 +560,6 @@ public class CodeGenVisitor implements ASTVisitor {
             //resize rhs   imageops.resize(lhs)
             //else
             //clone
-
             //else
             //append(assignmentstatement.getname "=" visitexpr)
             if (assignmentStatement.getSelector() != null) {
@@ -581,7 +581,6 @@ public class CodeGenVisitor implements ASTVisitor {
                     sb.append("ImageOps.setColor(" + name + ", " + var1 + ", " + var2 + ", ");
                     expr.visit(this, sb);
                     sb.rparen();
-
                 }
                 else {
                     // expr.setCoerceTo(Type.IMAGE);
@@ -591,24 +590,14 @@ public class CodeGenVisitor implements ASTVisitor {
                         sb.comma();
                         assignmentStatement.getSelector().visit(this,sb);
                         sb.append(")");
-
-
                     } else {
                         sb.append("ImageOps.clone(");
                         expr.visit(this,sb);
                         sb.append(")");
                     }
-
-
                 }
-
-
             }
-
-
         }
-
-
         else {
             sb.append(name);
             sb.equals();
@@ -626,9 +615,6 @@ public class CodeGenVisitor implements ASTVisitor {
         }
         sb.semi();
         sb.newline();
-
-
-
         return sb;
     }
 */
