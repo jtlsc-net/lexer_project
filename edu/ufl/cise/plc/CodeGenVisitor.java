@@ -298,6 +298,9 @@ public class CodeGenVisitor implements ASTVisitor {
 			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.OP.*") == -1) {
 				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.OP.*");
 			}
+			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*") == -1) {
+				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*");
+			}
 			sb.append("ImageOps.binaryTupleOp(" + binaryExpr.getOp().getKind().toString() + ", ");
 			left.visit(this, sb);
 			sb.comma().space();
@@ -310,6 +313,9 @@ public class CodeGenVisitor implements ASTVisitor {
 			}
 			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.OP.*") == -1) {
 				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.OP.*");
+			}
+			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*") == -1) {
+				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*");
 			}
 			sb.append("ImageOps.binaryImageScalarOp(" + binaryExpr.getOp().getKind().toString() + ", ");
 			left.visit(this, sb);
@@ -428,8 +434,6 @@ public class CodeGenVisitor implements ASTVisitor {
 			expr.visit(this, sb);
 			sb.rparen();
 		}        //TODO problem with this
-
-
  /*
       else if (assignmentStatement.getTargetDec().getType() == Type.IMAGE) {
             //TODO check if this works/ this was given pseudocode by a ta, might not work for us
