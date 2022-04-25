@@ -93,7 +93,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.append(String.valueOf(intValue));
 		}
 		else if (intLitExpr.getCoerceTo() != type && intLitExpr.getCoerceTo() != null) {
-			System.out.println(intLitExpr.getCoerceTo().toString());
+			//System.out.println(intLitExpr.getCoerceTo().toString());
 			genTypeConversion(type, intLitExpr.getCoerceTo(), sb);
 			sb.append(String.valueOf(intValue));
 			sb.append(")");
@@ -394,7 +394,7 @@ public class CodeGenVisitor implements ASTVisitor {
 		CodeGenStringBuilder fakeOne = new CodeGenStringBuilder();
 		String name = assignmentStatement.getName();
 		Expr expr = assignmentStatement.getExpr();
-		System.out.println(assignmentStatement.getExpr());
+		//System.out.println(assignmentStatement.toString());
 		if (expr.getType() == Type.COLOR && expr.getCoerceTo() == Type.COLOR) {
 			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
 				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
@@ -536,8 +536,11 @@ public class CodeGenVisitor implements ASTVisitor {
 			if (imports.indexOf("edu.ufl.cise.plc.runtime.FileURLIO") == -1) {
 				imports.add("edu.ufl.cise.plc.runtime.FileURLIO");
 			}
+			sb.append("FileURLIO.writeImage(");
 			writeStatement.getSource().visit(this, sb);
-			sb.append("FileURLIO.writeImage("+writeStatement.getSource().getText() + "," + writeStatement.getDest().getText() + ");");
+			sb.comma().space();
+			writeStatement.getDest().visit(this, sb);
+			sb.rparen().semi().newline();
 
 
 
@@ -545,9 +548,11 @@ public class CodeGenVisitor implements ASTVisitor {
 			if (imports.indexOf("edu.ufl.cise.plc.runtime.FileURLIO") == -1) {
 				imports.add("edu.ufl.cise.plc.runtime.FileURLIO");
 			}
+			sb.append("FileURLIO.writeValue(");
 			writeStatement.getSource().visit(this, sb);
-			sb.append("FileURLIO.writeValue("+writeStatement.getSource().getText() + "," +  writeStatement.getDest().getText()+ ");" );
-
+			sb.comma().space();
+			writeStatement.getDest().visit(this, sb);
+			sb.rparen().semi().newline();
 
 		}
 		else {
@@ -578,9 +583,17 @@ public class CodeGenVisitor implements ASTVisitor {
 				readStatement.getSource().visit(this, sb);
 				sb.comma();
 				readStatement.getSelector().visit(this,sb);
-				sb.append(");\nFileURLIO.closeFiles();\n");
+				sb.rparen().semi();
 
 
+			}
+			else if(readStatement.getSource().getType() != Type.IMAGE) {
+				sb.append(name).space();
+				sb.equals().space();
+				genTypeConversionNoParen(readStatement.getSource().getType(), readStatement.getTargetDec().getType(), sb);
+				sb.space().append("FileURLIO.readValueFromFile(");
+				readStatement.getSource().visit(this, sb);
+				sb.rparen().semi().newline();
 			}
 			else{
 				if( readStatement.getSource().getType() ==Type.IMAGE) {
@@ -588,7 +601,7 @@ public class CodeGenVisitor implements ASTVisitor {
 					sb.equals();
 					sb.append("FileURLIO.readImage(");
 					readStatement.getSource().visit(this, sb);
-					sb.append(");\nFileURLIO.closeFiles();\n");
+					sb.rparen().semi();
 
 
 				}
@@ -637,7 +650,7 @@ public class CodeGenVisitor implements ASTVisitor {
 			sb.newline();
 		}
 		sb.tab().RCurl().newline().RCurl();
-
+		
 		if (imports.size() > 0) {
 			for (int x = 0; x < imports.size(); x++) {
 				sb.insert(0, "import " + imports.get(x) + ";\n");
@@ -712,6 +725,10 @@ public class CodeGenVisitor implements ASTVisitor {
 	@Override
 	public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+		if (imports.indexOf("edu.ufl.cise.plc.runtime.FileURLIO") != -1) {
+			sb.append("FileURLIO.closeFiles();").newline();
+			sb.tab().tab();
+		}
 		Expr expr = returnStatement.getExpr();
 		sb.append("return ");
 		expr.visit(this, sb);
@@ -735,7 +752,8 @@ public class CodeGenVisitor implements ASTVisitor {
 				sb.append(", BufferedImage.TYPE_INT_RGB)");
 			}
 			sb.semi();
-		} else {
+		}
+		else {
 			Kind op = declaration.getOp().getKind();
 			if (op == Kind.ASSIGN || op == Kind.LARROW) {
 				declaration.getNameDef().visit(this, sb);
@@ -770,10 +788,19 @@ public class CodeGenVisitor implements ASTVisitor {
 						declaration.getDim().visit(this, sb);
 						sb.rparen().semi().newline();
 					}
-					sb.tab().tab().append("FileURLIO.closeFiles()");
 				}
 				else {
-					if (declaration.getExpr().getCoerceTo() != declaration.getExpr().getType() && declaration.getExpr().getCoerceTo() != null) {
+					if(op == Kind.LARROW && declaration.getExpr().getType() == Type.STRING) {
+						if (imports.indexOf("edu.ufl.cise.plc.runtime.FileURLIO") == -1) {
+							imports.add("edu.ufl.cise.plc.runtime.FileURLIO");
+						}
+						sb.space();
+						genTypeConversionNoParen(declaration.getExpr().getType(), declaration.getNameDef().getType(), sb);
+						sb.space().append("FileURLIO.readValueFromFile(");
+						declaration.getExpr().visit(this, sb);
+						sb.rparen().semi().newline();
+					}
+					else if (declaration.getExpr().getCoerceTo() != declaration.getExpr().getType() && declaration.getExpr().getCoerceTo() != null) {
 						//					if(declaration.getExpr().)
 						genTypeConversionNoParen(declaration.getType(), declaration.getExpr().getCoerceTo(), sb);
 						sb.lparen();
