@@ -326,6 +326,33 @@ public class CodeGenVisitor implements ASTVisitor {
 			right.visit(this, sb);
 			sb.rparen();
 		}
+		else if(binaryExpr.getLeft().getType() == Type.IMAGE && right.getType() == Type.COLOR) {
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+			}
+			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.OP.*") == -1) {
+				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.OP.*");
+			}
+			if(imports.indexOf("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*") == -1) {
+				imports.add("static edu.ufl.cise.plc.runtime.ImageOps.BoolOP.*");
+			}
+			sb.append("ImageOps.binaryImageScalarOp(ImageOps.OP." + binaryExpr.getOp().getKind().toString() + ", ");
+			left.visit(this, sb);
+			sb.comma().space();
+			right.visit(this, sb);
+			sb.rparen().comma().space();
+			sb.append("ColorTuple.makePackedColor(ColorTuple.getRed(");
+			right.visit(this,sb);
+			sb.rparen().comma().space();
+			sb.append("ColorTuple.makePackedColor(ColorTuple.getGreen(");
+			right.visit(this,sb);
+			sb.rparen().comma().space();
+			sb.append("ColorTuple.makePackedColor(ColorTuple.getBlue(");
+			right.visit(this,sb);
+			sb.rparen().rparen().semi();
+
+
+		}
 		else if(binaryExpr.getLeft().getType() == Type.STRING && binaryExpr.getOp().getKind() == Kind.EQUALS) {
 			binaryExpr.getLeft().visit(this, sb);
 			sb.append(".equals(");
