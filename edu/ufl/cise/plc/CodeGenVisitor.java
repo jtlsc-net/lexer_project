@@ -445,6 +445,7 @@ public class CodeGenVisitor implements ASTVisitor {
 		//throw new UnsupportedOperationException("Dimension not yet implemented.");
 	}
 
+	record testside(CodeGenStringBuilder sb, String imageName){}
 	@Override
 	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
@@ -464,24 +465,143 @@ public class CodeGenVisitor implements ASTVisitor {
 
 
 		return sb;
+/*
+        if(arg instanceof testside){
+            CodeGenStringBuilder sb = ((testside) arg).sb;
+            pixelSelector.getY().visit(this, sb);
+            sb.comma();
+            pixelSelector.getX().visit(this, sb);
+            //lhs
+            //sb.append(pixelSelector.getX().getText() + ", " + pixelSelector.getY().getText());
+        }
+        //rhs
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        pixelSelector.getY().visit(this, sb);
+        sb.comma();
+        pixelSelector.getX().visit(this, sb);
+
+
+        return sb;
+        */
+
 	}
-	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg, boolean rhs) throws Exception {
-		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-
-		if(rhs == true) {
-			sb.append("ImageOps.getRGB(" + pixelSelector.getText());
-			sb.comma();
-			pixelSelector.getX().visit(this, sb);
-			sb.comma();
-			pixelSelector.getY().visit(this, sb);
-		}
-
-		return sb;
-	}
 
 
 
 
+
+	/*
+        @Override
+        public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
+            // if target type image
+            //   if get pixel selector != null
+            //handle x and y
+            //else
+            //if expr.getCoerceTo()==type.color
+            //imageops.setcolor
+            //else rhs is image
+            //if dim != null
+            //resize rhs   imageops.resize(lhs)
+            //else
+            //clone
+
+            //else
+            //append(assignmentstatement.getname "=" visitexpr)
+            CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+            CodeGenStringBuilder fakeOne = new CodeGenStringBuilder();
+            String name = assignmentStatement.getName();
+            Expr expr = assignmentStatement.getExpr();
+            //  System.out.println(assignmentStatement.getTargetDec().getType().toString());
+
+
+            if (assignmentStatement.getTargetDec().getType() == Type.IMAGE && assignmentStatement.getExpr().getType() == Type.IMAGE) {
+                if(assignmentStatement.getSelector() != null){
+                        if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+                            imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+                        }
+                        assignmentStatement.getSelector().visit(this, fakeOne);
+                        String[] splitArr = fakeOne.getString().split(",");
+                        String var1 = splitArr[0].trim();
+                        String var2 = splitArr[1].trim();
+                        sb.append("for( int " + var1 + " = 0; " + var1 + " < " + name + ".getWidth(); " + var1 + "++)").newline().tab().tab().tab();
+                        sb.append("for( int " + var2 + " = 0; " + var2 + " < " + name + ".getHeight(); " + var2 + "++)").newline().tab().tab().tab().tab();
+                        sb.append("ImageOps.setColor(" + name + ", " + var1 + ", " + var2 + ", ");
+                        expr.visit(this, sb);
+                        sb.rparen();
+
+                }
+
+
+
+
+
+
+
+
+                //  System.out.println("test");
+                if (assignmentStatement.getTargetDec().getDim() != null) {
+                    sb.append("ImageOps.resize("+ assignmentStatement.getName());
+                    sb.comma();
+                    assignmentStatement.getSelector().visit(this,sb);
+                    sb.append(")");
+                }
+
+                    // assignmentStatement.getName() = assignmentStatement.getTargetDec();
+                    sb.append("ImageOps.resize("+ assignmentStatement.getName());
+                    sb.comma();
+                    assignmentStatement.getSelector().visit(this,sb);
+                    sb.append(")");
+                    if(expr instanceof   IdentExpr){
+                        sb.append("ImageOps.clone(");
+                        expr.visit(this,sb);
+                        sb.append(")");
+                    }
+
+
+                }
+
+                    if (expr.getCoerceTo() == Type.INT) {
+                        if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+                            imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+                        }
+                        assignmentStatement.getSelector().visit(this, fakeOne);
+                        String[] splitArr = fakeOne.getString().split(",");
+                        String var1 = splitArr[0].trim();
+                        String var2 = splitArr[1].trim();
+                        sb.append("for( int " + var1 + " = 0; " + var1 + " < " + name + ".getWidth(); " + var1 + "++)").newline().tab().tab().tab();
+                        sb.append("for( int " + var2 + " = 0; " + var2 + " < " + name + ".getHeight(); " + var2 + "++)").newline().tab().tab().tab().tab();
+                        sb.append("ImageOps.setColor(" + name + ", " + var1 + ", " + var2 + ", ColorTuple.unpack(ColorTuple.truncate(");
+                        expr.visit(this, sb);
+                        sb.rparen().rparen();
+                    }
+
+
+            }
+
+            else {
+
+                sb.append(name);
+                sb.equals();
+                if (expr.getCoerceTo() != expr.getType() && expr.getCoerceTo() != null) {
+                    //			if(declaration.getExpr().)
+                    genTypeConversionNoParen(expr.getType(), expr.getCoerceTo(), sb);
+                    sb.lparen();
+                    expr.visit(this, sb);
+                    sb.rparen();
+                }
+                else {
+                    expr.visit(this, sb);
+                    //	        sb.append(expr.getText());
+                }
+            }
+            sb.semi();
+            sb.newline();
+
+
+
+            return sb;
+        }
+    */
 	@Override
 	public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
@@ -489,20 +609,55 @@ public class CodeGenVisitor implements ASTVisitor {
 		String name = assignmentStatement.getName();
 		Expr expr = assignmentStatement.getExpr();
 		//System.out.println(assignmentStatement.toString());
-		if (expr.getType() == Type.COLOR && expr.getCoerceTo() == Type.COLOR) {
-			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
-				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+		if (assignmentStatement.getTargetDec().getType() == Type.IMAGE) {
+			if (assignmentStatement.getTargetDec().getDim() != null) {
+				sb.append("ImageOps.resize(");
+				assignmentStatement.getName();
+				sb.comma();
+				assignmentStatement.getSelector().visit(this,sb);
+				sb.append(")");
+			} else {
+				sb.append("ImageOps.clone(");
+				expr.visit(this,sb);
+				sb.append(")");
 			}
-			assignmentStatement.getSelector().visit(this, fakeOne);
-			String[] splitArr = fakeOne.getString().split(",");
-			String var1 = splitArr[0].trim();
-			String var2 = splitArr[1].trim();
-			sb.append("for( int " + var1 + " = 0; " + var1 + " < " + name + ".getWidth(); " + var1 + "++)").newline().tab().tab().tab();
-			sb.append("for( int " + var2 + " = 0; " + var2 + " < " + name + ".getHeight(); " + var2 + "++)").newline().tab().tab().tab().tab();
-			sb.append("ImageOps.setColor(" + name + ", " + var1 + ", " + var2 + ", ");
-			expr.visit(this, sb);
-			sb.rparen();
-		}        //TODO problem with this
+
+			if (expr.getType() == Type.COLOR && expr.getCoerceTo() == Type.COLOR) {
+				if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+					imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+				}
+				assignmentStatement.getSelector().visit(this, fakeOne);
+				String[] splitArr = fakeOne.getString().split(",");
+				String var1 = splitArr[0].trim();
+				String var2 = splitArr[1].trim();
+				sb.append("for( int " + var1 + " = 0; " + var1 + " < " + name + ".getWidth(); " + var1 + "++)").newline().tab().tab().tab();
+				sb.append("for( int " + var2 + " = 0; " + var2 + " < " + name + ".getHeight(); " + var2 + "++)").newline().tab().tab().tab().tab();
+				sb.append("ImageOps.setColor(" + name + ", " + var1 + ", " + var2 + ", ");
+				expr.visit(this, sb);
+				sb.rparen();
+			} else if (assignmentStatement.getTargetDec().getType() == Type.IMAGE && expr.getCoerceTo() == Type.INT) {
+				//   sb.append("for(int " + assignmentStatement.getSelector().getX() + " =0; "+ assignmentStatement.getSelector().getX() + " < " + name + ".getWidth();\n");
+				// sb.append(assignmentStatement.getSelector().getX() + )
+				if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+					imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+				}
+				assignmentStatement.getSelector().visit(this, fakeOne);
+				String[] splitArr = fakeOne.getString().split(",");
+				String var1 = splitArr[0].trim();
+				String var2 = splitArr[1].trim();
+				sb.append("for( int " + var1 + " = 0; " + var1 + " < " + name + ".getWidth(); " + var1 + "++)").newline().tab().tab().tab();
+				sb.append("for( int " + var2 + " = 0; " + var2 + " < " + name + ".getHeight(); " + var2 + "++)").newline().tab().tab().tab().tab();
+				sb.append("ImageOps.setColor(" + name + ", " + var1 + ", " + var2 + ", ");
+				expr.visit(this, sb);
+				sb.rparen();
+
+
+			}
+		}
+
+
+
+		//TODO problem with this
  /*
         if (assignmentStatement.getTargetDec().getType() == Type.IMAGE) {
             //TODO check if this works/ this was given pseudocode by a ta, might not work for us
