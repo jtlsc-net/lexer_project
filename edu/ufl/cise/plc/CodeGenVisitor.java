@@ -202,70 +202,74 @@ public class CodeGenVisitor implements ASTVisitor {
 		Type type = unaryExpression.getType();
 		Expr expr = unaryExpression.getExpr();
 
-		if ((type == Type.IMAGE || type == Type.COLOR || type == Type.COLORFLOAT) ||
-				(expr.getType() == Type.INT && unaryExpression.getOp().getKind() == Kind.COLOR_OP)){
-			//TODO idk what this if does
-			if(unaryExpression.getOp().getKind() == Kind.COLOR_OP){
-
-				if(expr.getType() == Type.INT){
-					if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
-						imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
-					}
-					sb.append("ColorTuple." + unaryExpression.getOp().getText() + "(");
-					unaryExpression.getExpr().visit(this,sb);
-					sb.rparen();
+		//   if ((type == Type.IMAGE || type == Type.COLOR || type == Type.COLORFLOAT) ||
+		//         (expr.getType() == Type.INT && unaryExpression.getOp().getKind() == Kind.COLOR_OP)){
+		//TODO idk what this if does
+		if(unaryExpression.getOp().getKind() == Kind.COLOR_OP){
+			if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+				imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+			}
+			if(expr.getType() == Type.INT){
+				if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+					imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
 				}
-				else if(expr.getType() == Type.COLOR ){
-					if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
-						imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
-					}
-					//  BufferedImage image = (BufferedImage)(new PLCLangExec("mypackage",true)).exec(input, null);
-					sb.append("ColorTuple." + unaryExpression.getOp().getText() + "(");
-					unaryExpression.getExpr().visit(this,sb);
-					sb.rparen();
-
-				}else if(expr.getType() == Type.IMAGE ){
-
-
-					//TODO this is probably wrong, needs work
-					sb.append("ImageOps.extract");
-					String opName = unaryExpression.getOp().getText();
-
-					switch(opName) {
-						case "Red" ->{
-							sb.append("Red");
-							break;
-						}
-						case "Blue"->{
-							sb.append("Blue");
-							break;
-						}
-						case "Green"->{
-							sb.append("Green");
-							break;
-
-						}
-						default -> {
-							throw new IllegalArgumentException("Wrong Op type");
-
-						}
-					}
-					sb.append("(");
-					expr.visit(this,sb);
-					sb.rparen().semi().newline();
-
-
+				sb.append("ColorTuple." + unaryExpression.getOp().getText() + "(");
+				unaryExpression.getExpr().visit(this,sb);
+				sb.rparen();
+			}
+			else if(expr.getType() == Type.COLOR ){
+				if(imports.indexOf("edu.ufl.cise.plc.runtime.ColorTuple") == -1) {
+					imports.add("edu.ufl.cise.plc.runtime.ColorTuple");
 				}
+				//  BufferedImage image = (BufferedImage)(new PLCLangExec("mypackage",true)).exec(input, null);
+				sb.append("ColorTuple." + unaryExpression.getOp().getText() + "(");
+				unaryExpression.getExpr().visit(this,sb);
+				sb.rparen();
+
+			}else if(expr.getType() == Type.IMAGE ){
+
+
+				//TODO this is probably wrong, needs work
+				sb.append("ImageOps.extract");
+				String opName = unaryExpression.getOp().getText();
+				//  System.out.println(opName);
+				switch(opName) {
+					case "getRed" ->{
+						sb.append("Red");
+						break;
+					}
+					case "getBlue"->{
+						sb.append("Blue");
+						break;
+					}
+					case "getGreen"->{
+						sb.append("Green");
+						break;
+
+					}
+					default -> {
+						throw new IllegalArgumentException("Wrong Op type");
+
+					}
+				}
+				sb.append("(");
+				expr.visit(this,sb);
+				sb.rparen().newline();
 
 
 			}
-			//TODO idk if this is right
+
 
 		}
+		//TODO idk if this is right
+
+		//  }
 
 		else {
+			// System.out.println("test" + unaryExpression.getOp().getText());
 			sb.lparen();
 			sb.append(unaryExpression.getOp().getText());
+			sb.space();
 			unaryExpression.getExpr().visit(this, sb);
 			sb.rparen();
 
@@ -445,8 +449,38 @@ public class CodeGenVisitor implements ASTVisitor {
 	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		sb.append(pixelSelector.getX().getText() + ", " + pixelSelector.getY().getText());
+
+
+
+
+		//if()
+		//   sb.append("ImageOps.getRGB(" +pixelSelector.getText());
+		// sb.comma();
+		// pixelSelector.getX().visit(this, sb);
+		// sb.comma();
+		//pixelSelector.getY().visit(this, sb);
+
+		//
+
+
 		return sb;
 	}
+	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg, boolean rhs) throws Exception {
+		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+
+		if(rhs == true) {
+			sb.append("ImageOps.getRGB(" + pixelSelector.getText());
+			sb.comma();
+			pixelSelector.getX().visit(this, sb);
+			sb.comma();
+			pixelSelector.getY().visit(this, sb);
+		}
+
+		return sb;
+	}
+
+
+
 
 	@Override
 	public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
