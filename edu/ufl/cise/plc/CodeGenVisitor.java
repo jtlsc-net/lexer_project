@@ -613,6 +613,7 @@ public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, 
     String name = assignmentStatement.getName();
     Expr expr = assignmentStatement.getExpr();
     //System.out.println(assignmentStatement.toString());
+
     if (assignmentStatement.getTargetDec().getType() == Type.IMAGE) {
         if( expr.getType() == Type.IMAGE){
             if (assignmentStatement.getTargetDec().getDim() != null) {
@@ -958,12 +959,27 @@ public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, 
                 if (imports.indexOf("edu.ufl.cise.plc.runtime.FileURLIO") == -1) {
                     imports.add("edu.ufl.cise.plc.runtime.FileURLIO");
                 }
-                sb.append(name).space();
-                sb.equals().space();
-                genTypeConversionNoParen(readStatement.getSource().getType(), readStatement.getTargetDec().getType(), sb);
-                sb.space().append("FileURLIO.readImage(");
-                readStatement.getSource().visit(this, sb);
-                sb.rparen().semi().newline();
+                if (readStatement.getTargetDec().getDim() != null) {
+                	if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+						imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+					}
+                	sb.append(name).space();
+	                sb.equals().space();
+					sb.append("ImageOps.resize(");
+					sb.append("FileURLIO.readImage(");
+					readStatement.getSource().visit(this, sb);
+					sb.rparen().comma().space();
+					readStatement.getTargetDec().getDim().visit(this, sb);
+					sb.rparen().semi().newline();
+                }
+                else {
+	                sb.append(name).space();
+	                sb.equals().space();
+	                genTypeConversionNoParen(readStatement.getSource().getType(), readStatement.getTargetDec().getType(), sb);
+	                sb.space().append("FileURLIO.readImage(");
+	                readStatement.getSource().visit(this, sb);
+	                sb.rparen().semi().newline();
+                }
             }
             else if(readStatement.getSource().getType() != Type.IMAGE) {
                 if (imports.indexOf("edu.ufl.cise.plc.runtime.FileURLIO") == -1) {
