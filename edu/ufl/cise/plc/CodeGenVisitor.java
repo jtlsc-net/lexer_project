@@ -265,6 +265,10 @@ public class CodeGenVisitor implements ASTVisitor {
 
       //  }
 
+        	else if (unaryExpression.getOp().getKind() == Kind.IMAGE_OP) {
+    			expr.visit(this, sb);
+    			sb.append("." + unaryExpression.getText()).lparen().rparen();
+    		}
         else {
                // System.out.println("test" + unaryExpression.getOp().getText());
             sb.lparen();
@@ -1153,15 +1157,35 @@ public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, 
                         String x = declaration.getExpr().toString();
                         String[] y = x.split(" ");
                         if(!y[0].equals("BinaryExpr")) {
-                            sb.append("FileURLIO.readImage(");
-                            declaration.getExpr().visit(this, sb);
-                            sb.rparen();
+                        	if(declaration.getExpr().getType() == Type.IMAGE) {
+								if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+									imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+								}
+								sb.append("ImageOps.clone(");
+								declaration.getExpr().visit(this, sb);
+								sb.rparen();
+							}
+							else {
+								sb.append("FileURLIO.readImage(");
+								declaration.getExpr().visit(this, sb);
+								sb.rparen();
+							}
                         }
                         else {
                             declaration.getExpr().visit(this, sb);
 
                         }
                     }
+                    else if(declaration.getExpr().getType() == Type.IMAGE) {
+						if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+							imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+						}
+						sb.append("ImageOps.resize(");
+						declaration.getExpr().visit(this, sb);
+						sb.comma().space();
+						declaration.getDim().visit(this, sb);
+						sb.rparen();
+					}
                     else {
                         sb.append("FileURLIO.readImage(");
                         declaration.getExpr().visit(this, sb);
