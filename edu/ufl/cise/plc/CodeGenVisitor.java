@@ -201,7 +201,6 @@ public class CodeGenVisitor implements ASTVisitor {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		Type type = unaryExpression.getType();
 		Expr expr = unaryExpression.getExpr();
-
 		//   if ((type == Type.IMAGE || type == Type.COLOR || type == Type.COLORFLOAT) ||
 		//         (expr.getType() == Type.INT && unaryExpression.getOp().getKind() == Kind.COLOR_OP)){
 		//TODO idk what this if does
@@ -264,9 +263,13 @@ public class CodeGenVisitor implements ASTVisitor {
 		//TODO idk if this is right
 
 		//  }
-
+		else if (unaryExpression.getOp().getKind() == Kind.IMAGE_OP) {
+			expr.visit(this, sb);
+			sb.append("." + unaryExpression.getText()).lparen().rparen();
+		}
 		else {
 			// System.out.println("test" + unaryExpression.getOp().getText());
+			//System.out.println("hi");
 			sb.lparen();
 			sb.append(unaryExpression.getOp().getText());
 			sb.space();
@@ -394,8 +397,11 @@ public class CodeGenVisitor implements ASTVisitor {
 
 		// TODO might be wrong visit/also check if it needed
 		// identExpr.visit(this, sb);
-
-		if(identExpr.getCoerceTo() == Type.INT && identExpr.getType() == Type.COLOR) {
+//		if(identExpr.getType() == Type.IMAGE) {
+//			identExpr.getDec().visit(this, sb);
+//		}
+//		else 
+			if(identExpr.getCoerceTo() == Type.INT && identExpr.getType() == Type.COLOR) {
 			sb.append(text);
 		}
 		else if(identExpr.getCoerceTo() == Type.COLOR && identExpr.getType() == Type.INT) {
@@ -436,7 +442,6 @@ public class CodeGenVisitor implements ASTVisitor {
 	@Override
 	public Object visitDimension(Dimension dimension, Object arg) throws Exception {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-
 		dimension.getWidth().visit(this, sb);
 		sb.comma().space();
 		dimension.getHeight().visit(this, sb);
@@ -1102,7 +1107,6 @@ public class CodeGenVisitor implements ASTVisitor {
 	public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
 		CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 		IToken opExpr = declaration.getOp();
-		//System.out.println(declaration.getType() + " " + declaration.getExpr().getType());
 		if (declaration.getOp() == null) {
 			declaration.getNameDef().visit(this, sb);
 			if(declaration.getNameDef().getType() == Type.IMAGE) {
@@ -1144,7 +1148,18 @@ public class CodeGenVisitor implements ASTVisitor {
 
 						}
 					}
+					else if(declaration.getExpr().getType() == Type.IMAGE) {
+						if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+							imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+						}
+						sb.append("ImageOps.resize(");
+						declaration.getExpr().visit(this, sb);
+						sb.comma().space();
+						declaration.getDim().visit(this, sb);
+						sb.rparen();
+					}
 					else {
+						//System.out.println(declaration.getType() + " " + declaration.getExpr().getType());
 						sb.append("FileURLIO.readImage(");
 						declaration.getExpr().visit(this, sb);
 						sb.comma().space();

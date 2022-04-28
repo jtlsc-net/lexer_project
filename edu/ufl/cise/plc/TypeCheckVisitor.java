@@ -518,6 +518,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 			boolean flag = false;
 			if (rhs != null && rhs.getType() != null && declaration.getOp().getKind() != Kind.LARROW) {
 				initializer.setType(rhs.getType());
+				if(declaration.getType() == Type.IMAGE && declaration.getDim() != null) {
+					declaration.getDim().visit(this, arg);
+				}
 				if(!rhs.isInitialized()) {
 					throw new TypeCheckException("Can't assign to variable that is not initialized.");
 				}
@@ -588,9 +591,11 @@ public class TypeCheckVisitor implements ASTVisitor {
 					initializer.setCoerceTo(IMAGE);
 					flag = true;
 				}
+				
 				check(assignmentCompatible(declaration.getType(), initializerType) || flag == true,declaration,
 						"type of expression and declared type do not match rhs not in symbol table " + declaration.getType() + " + " + initializerType);
 			}
+			
 			declaration.setInitialized(true);
 			return null;
 		}
