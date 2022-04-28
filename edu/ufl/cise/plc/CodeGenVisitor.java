@@ -397,11 +397,8 @@ public class CodeGenVisitor implements ASTVisitor {
 
 		// TODO might be wrong visit/also check if it needed
 		// identExpr.visit(this, sb);
-//		if(identExpr.getType() == Type.IMAGE) {
-//			identExpr.getDec().visit(this, sb);
-//		}
-//		else 
-			if(identExpr.getCoerceTo() == Type.INT && identExpr.getType() == Type.COLOR) {
+		//System.out.println(identExpr.getCoerceTo() + " " + identExpr.getType());
+		if(identExpr.getCoerceTo() == Type.INT && identExpr.getType() == Type.COLOR) {
 			sb.append(text);
 		}
 		else if(identExpr.getCoerceTo() == Type.COLOR && identExpr.getType() == Type.INT) {
@@ -1138,10 +1135,21 @@ public class CodeGenVisitor implements ASTVisitor {
 						//BinaryExpr x = (BinaryExpr) declaration.getExpr();
 						String x = declaration.getExpr().toString();
 						String[] y = x.split(" ");
+						System.out.println(declaration.getType() + " " + declaration.getExpr().getType());
 						if(!y[0].equals("BinaryExpr")) {
-							sb.append("FileURLIO.readImage(");
-							declaration.getExpr().visit(this, sb);
-							sb.rparen();
+							if(declaration.getExpr().getType() == Type.IMAGE) {
+								if (imports.indexOf("edu.ufl.cise.plc.runtime.ImageOps") == -1) {
+									imports.add("edu.ufl.cise.plc.runtime.ImageOps");
+								}
+								sb.append("ImageOps.clone(");
+								declaration.getExpr().visit(this, sb);
+								sb.rparen();
+							}
+							else {
+								sb.append("FileURLIO.readImage(");
+								declaration.getExpr().visit(this, sb);
+								sb.rparen();
+							}
 						}
 						else {
 							declaration.getExpr().visit(this, sb);
@@ -1159,7 +1167,7 @@ public class CodeGenVisitor implements ASTVisitor {
 						sb.rparen();
 					}
 					else {
-						//System.out.println(declaration.getType() + " " + declaration.getExpr().getType());
+						
 						sb.append("FileURLIO.readImage(");
 						declaration.getExpr().visit(this, sb);
 						sb.comma().space();
